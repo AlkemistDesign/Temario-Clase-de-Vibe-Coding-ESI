@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <title>Usa la IA para Aprender, no para Copiar — Apuntes de Vibe Coding</title>
+  <meta name="description"
+    content="4 prompts y roles fundamentales para convertir la IA en tu profesor particular, pair programmer, desarrollador senior y debugger.">
+
+  <!-- Tipografía: Inter y JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+            mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+          },
+          colors: {
+            brand: {
+              teal: {
+                DEFAULT: '#0D9488',
+                hover: '#0F766E',
+                light: '#14B8A6',
+                lightHover: '#2DD4BF',
+              },
+              orange: {
+                DEFAULT: '#C2410C',
+                hover: '#9A3412',
+                light: '#FB923C',
+                lightHover: '#FDBA74',
+              }
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root {
+      color-scheme: light dark;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+
+    /* Estilos del Bloque de Prompt (Tokyo Night) */
+    .prompt-card {
+      background-color: #1a1b26;
+      border: 1px solid rgba(74, 85, 104, 0.4);
+      font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+    }
+
+    .dark .prompt-card {
+      background-color: #13141f;
+      border-color: rgba(51, 65, 85, 0.6);
+    }
+
+    .token-role {
+      color: #2dd4bf;
+      font-weight: 600;
+    }
+
+    .token-param {
+      color: #fb923c;
+      font-weight: 600;
+    }
+
+    .token-tag {
+      color: #38bdf8;
+      font-weight: 500;
+    }
+
+    .token-string {
+      color: #9ece6a;
+    }
+
+    .token-comment {
+      color: #64748b;
+      font-style: italic;
+    }
+
+    .token-keyword {
+      color: #bb9af7;
+      font-weight: 600;
+    }
+  </style>
+
+  <!-- Script previo para evitar parpadeo de tema (FOUC) -->
+  <script>
+    if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  </script>
+</head>
+
+<body
+  class="bg-slate-50 text-slate-900 dark:bg-[#0c1322] dark:text-slate-100 font-sans min-h-screen flex flex-col antialiased transition-colors duration-200">
+
+  <!-- ========================================== -->
+  <!-- BARRA SUPERIOR (TOP BAR)                   -->
+  <!-- ========================================== -->
+  <header
+    class="w-full border-b border-slate-200/60 dark:border-slate-800/60 bg-slate-50/90 dark:bg-[#0c1322]/90 backdrop-blur-md sticky top-0 z-40">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+
+      <div class="flex items-center gap-4">
+        <!-- Regreso a Recursos -->
+        <a href="4-otros-recursos.html"
+          class="flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors group">
+          <svg class="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" fill="none" stroke="currentColor"
+            viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path>
+          </svg>
+          <span>Recursos</span>
+        </a>
+
+        <span class="text-slate-300 dark:text-slate-700">|</span>
+
+        <!-- Logo / Título de sección -->
+        <span class="font-bold text-slate-900 dark:text-white tracking-tight text-base truncate">
+          Tema 4 · <span class="text-orange-600 dark:text-orange-400">Prompts ChatGPT</span>
+        </span>
+      </div>
+
+      <!-- Selector de Tema Claro/Oscuro -->
+      <button id="theme-toggle" type="button" aria-label="Cambiar tema claro / oscuro"
+        class="w-10 h-10 flex items-center justify-center rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-800/80 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-colors">
+        <svg id="theme-icon-sun" class="w-5 h-5 hidden dark:block text-white" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd"
+            d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"
+            clip-rule="evenodd"></path>
+        </svg>
+        <svg id="theme-icon-moon" class="w-5 h-5 block dark:hidden text-slate-700" fill="currentColor"
+          viewBox="0 0 20 20">
+          <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+        </svg>
+      </button>
+
+    </div>
+  </header>
+
+  <!-- ========================================== -->
+  <!-- CONTENIDO DEL DOCUMENTO                   -->
+  <!-- ========================================== -->
+  <main class="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
+
+    <!-- PORTADA / HERO -->
+    <div class="bg-white dark:bg-[#1a2333]/90 rounded-2xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-4">
+      <div class="flex items-center gap-3">
+        <img src="assets/chatgpt.svg" alt="ChatGPT" class="w-9 h-9 object-contain" />
+        <span class="px-3 py-1 rounded-full text-xs font-mono font-medium bg-orange-100 dark:bg-orange-950/60 text-orange-700 dark:text-orange-300 border border-orange-200/60 dark:border-orange-900/60">
+          Plantillas de Prompts · 4.4
+        </span>
+      </div>
+      
+      <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+        Usa la IA para Aprender, no para Copiar
+      </h1>
+      <p class="text-lg sm:text-xl font-medium text-orange-600 dark:text-orange-400">
+        4 formas de convertirla en tu profesor, pair programmer, senior y debugger
+      </p>
+      <p class="text-slate-600 dark:text-slate-300 leading-relaxed text-base">
+        La IA puede resolverte un ejercicio o escribir una función en segundos. El problema aparece cuando te limitas a copiar, pegar y seguir adelante sin entender qué ha pasado: ahí has delegado sin aprender. La IA no debe pensar por nosotros, sino ayudarnos a pensar mejor.
+      </p>
+
+      <div class="p-4 rounded-xl bg-orange-50 dark:bg-orange-950/30 border border-orange-200/70 dark:border-orange-900/50 text-sm text-slate-800 dark:text-slate-200 flex items-start gap-3">
+        <span class="text-lg shrink-0">💡</span>
+        <div>
+          <strong class="font-semibold text-orange-900 dark:text-orange-300">Criterio dev:</strong> Oblígate a pensar y a entender por qué haces lo que haces. Con o sin IA, al final <span class="italic">a programar se aprende programando</span>.
+        </div>
+      </div>
+    </div>
+
+    <!-- ROL 1: PROFESOR PARTICULAR -->
+    <section class="bg-white dark:bg-[#1a2333]/90 rounded-2xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-4">
+      <div class="flex items-center gap-3">
+        <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-orange-500/10 text-orange-600 dark:text-orange-400 font-mono font-bold text-sm border border-orange-500/30 shrink-0">1</span>
+        <h2 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+          Convierte la IA en tu profesor particular
+        </h2>
+      </div>
+      <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+        Evita que la IA te entregue la solución en bandeja. En lugar de decir <em>"Arréglame este error"</em>, pásale tu código y dile que te haga preguntas y pistas para encontrar tú el fallo de razonamiento.
+      </p>
+
+      <div class="prompt-card rounded-xl overflow-hidden shadow-lg">
+        <div class="px-4 py-2.5 bg-slate-900 border-b border-slate-800 flex items-center justify-between text-xs">
+          <span class="text-slate-400 font-mono">Prompt · Profesor Particular Socrático</span>
+          <button onclick="copyPrompt('prompt-rol-1', this)"
+            class="px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors flex items-center gap-1.5 font-mono text-xs border border-slate-700/60">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+            <span>Copiar Prompt</span>
+          </button>
+        </div>
+        <pre id="prompt-rol-1" class="p-4 text-xs sm:text-sm text-slate-200 overflow-x-auto leading-relaxed whitespace-pre-wrap"><span class="token-role">Actúa como mi profesor particular.</span>
+
+<span class="token-keyword">Nunca me des la solución completa:</span> guíame con preguntas y pistas, corrígeme cuando falle y no avances hasta que yo lo entienda.</pre>
+      </div>
+    </section>
+
+    <!-- ROL 2: PAIR PROGRAMMING -->
+    <section class="bg-white dark:bg-[#1a2333]/90 rounded-2xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-4">
+      <div class="flex items-center gap-3">
+        <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-orange-500/10 text-orange-600 dark:text-orange-400 font-mono font-bold text-sm border border-orange-500/30 shrink-0">2</span>
+        <h2 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+          Utilízala como compañero de Pair Programming
+        </h2>
+      </div>
+      <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+        El pair programming consiste en trabajar sobre un mismo problema mientras una persona programa y la otra revisa, pregunta y propone alternativas. Esto te obliga a verbalizar y justificar tus decisiones.
+      </p>
+
+      <div class="prompt-card rounded-xl overflow-hidden shadow-lg">
+        <div class="px-4 py-2.5 bg-slate-900 border-b border-slate-800 flex items-center justify-between text-xs">
+          <span class="text-slate-400 font-mono">Prompt · Compañero de Pair Programming</span>
+          <button onclick="copyPrompt('prompt-rol-2', this)"
+            class="px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors flex items-center gap-1.5 font-mono text-xs border border-slate-700/60">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+            <span>Copiar Prompt</span>
+          </button>
+        </div>
+        <pre id="prompt-rol-2" class="p-4 text-xs sm:text-sm text-slate-200 overflow-x-auto leading-relaxed whitespace-pre-wrap"><span class="token-role">Actúa como mi compañero de pair programming.</span>
+
+<span class="token-param">Yo voy a plantear y escribir la solución.</span> Revisa mi razonamiento, hazme preguntas sobre mis decisiones y señala posibles mejoras o alternativas.
+
+<span class="token-keyword">No escribas la solución completa por mí salvo que te lo pida expresamente.</span></pre>
+      </div>
+    </section>
+
+    <!-- ROL 3: SENIOR CODE REVIEW -->
+    <section class="bg-white dark:bg-[#1a2333]/90 rounded-2xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-4">
+      <div class="flex items-center gap-3">
+        <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-orange-500/10 text-orange-600 dark:text-orange-400 font-mono font-bold text-sm border border-orange-500/30 shrink-0">3</span>
+        <h2 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+          Pídele que actúe como tu Senior de confianza
+        </h2>
+      </div>
+      <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+        Cuando ya tienes una solución funcional, úsala para descubrir cómo refactorizarla, hacerla más eficiente y limpiar la arquitectura sin permitir que reescriba todo por su cuenta.
+      </p>
+
+      <div class="prompt-card rounded-xl overflow-hidden shadow-lg">
+        <div class="px-4 py-2.5 bg-slate-900 border-b border-slate-800 flex items-center justify-between text-xs">
+          <span class="text-slate-400 font-mono">Prompt · Code Review de Desarrollador Senior</span>
+          <button onclick="copyPrompt('prompt-rol-3', this)"
+            class="px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors flex items-center gap-1.5 font-mono text-xs border border-slate-700/60">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+            <span>Copiar Prompt</span>
+          </button>
+        </div>
+        <pre id="prompt-rol-3" class="p-4 text-xs sm:text-sm text-slate-200 overflow-x-auto leading-relaxed whitespace-pre-wrap"><span class="token-role">Actúa como un desarrollador senior revisando mi código.</span>
+
+<span class="token-keyword">No lo reescribas por mí.</span> Señálame qué podría mejorar en legibilidad, eficiencia, arquitectura o buenas prácticas, explícame por qué y deja que sea yo quien realice los cambios.</pre>
+      </div>
+    </section>
+
+    <!-- ROL 4: DEBUGGING ASISTIDO -->
+    <section class="bg-white dark:bg-[#1a2333]/90 rounded-2xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-4">
+      <div class="flex items-center gap-3">
+        <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-orange-500/10 text-orange-600 dark:text-orange-400 font-mono font-bold text-sm border border-orange-500/30 shrink-0">4</span>
+        <h2 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+          Haz debugging sin pedir "arréglamelo"
+        </h2>
+      </div>
+      <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+        Pegar un stack trace y decir <em>"Soluciónalo"</em> desperdicia la mejor oportunidad para entender la causa raíz del problema. Usa este prompt para que te proponga hipótesis y pistas progresivas:
+      </p>
+
+      <div class="prompt-card rounded-xl overflow-hidden shadow-lg">
+        <div class="px-4 py-2.5 bg-slate-900 border-b border-slate-800 flex items-center justify-between text-xs">
+          <span class="text-slate-400 font-mono">Prompt · Depuración Guiada por Hipótesis</span>
+          <button onclick="copyPrompt('prompt-rol-4', this)"
+            class="px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors flex items-center gap-1.5 font-mono text-xs border border-slate-700/60">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+            <span>Copiar Prompt</span>
+          </button>
+        </div>
+        <pre id="prompt-rol-4" class="p-4 text-xs sm:text-sm text-slate-200 overflow-x-auto leading-relaxed whitespace-pre-wrap"><span class="token-role">Ayúdame a depurar este problema sin corregirlo directamente.</span>
+
+<span class="token-param">Hazme preguntas para identificar la causa,</span> propón hipótesis que pueda comprobar y dame pistas progresivas.
+
+<span class="token-keyword">No me des la solución completa hasta que haya intentado resolverlo yo.</span></pre>
+      </div>
+    </section>
+
+    <!-- NAVEGACIÓN INFERIOR ENTRE RECURSOS -->
+    <div class="pt-6 border-t border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between gap-4">
+      <a href="4-3-guia-notebooklm.html"
+        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-sm font-medium transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+        <span>Anterior: Guía NotebookLM</span>
+      </a>
+
+      <a href="4-otros-recursos.html"
+        class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-500 text-white text-sm font-semibold transition-colors shadow-sm">
+        <span>Volver a Recursos</span>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+      </a>
+    </div>
+
+  </main>
+
+  <!-- PIE DE PÁGINA -->
+  <footer class="mt-auto py-8 text-center text-xs text-slate-500 dark:text-slate-500 border-t border-slate-200/60 dark:border-slate-800/60">
+    <div class="max-w-4xl mx-auto px-4">
+      Apuntes de la asignatura Vibe Coding — ESI Valladolid
+    </div>
+  </footer>
+
+  <!-- SCRIPT DE COPIADO Y TEMA -->
+  <script>
+    function copyPrompt(id, btn) {
+      const text = document.getElementById(id).innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = `<svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg><span class="text-emerald-400">¡Copiado!</span>`;
+        btn.classList.add('bg-emerald-950/60', 'border-emerald-800/80');
+        setTimeout(() => {
+          btn.innerHTML = originalHtml;
+          btn.classList.remove('bg-emerald-950/60', 'border-emerald-800/80');
+        }, 1800);
+      });
+    }
+
+    const themeToggleBtn = document.getElementById('theme-toggle');
+    themeToggleBtn.addEventListener('click', () => {
+      if (document.documentElement.classList.contains('dark')) {
+        document.documentElement.classList.remove('dark');
+        localStorage.setItem('theme', 'light');
+      } else {
+        document.documentElement.classList.add('dark');
+        localStorage.setItem('theme', 'dark');
+      }
+    });
+  </script>
+
+</body>
+</html>

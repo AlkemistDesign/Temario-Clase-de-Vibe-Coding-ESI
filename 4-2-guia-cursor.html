@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <title>Cursor para Programar con IA — Apuntes de Vibe Coding</title>
+  <meta name="description"
+    content="Guía práctica para avanzar más rápido con Cursor sin dejar de entender lo que estás construyendo.">
+
+  <!-- Tipografía: Inter y JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+            mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+          },
+          colors: {
+            brand: {
+              teal: {
+                DEFAULT: '#0D9488',
+                hover: '#0F766E',
+                light: '#14B8A6',
+                lightHover: '#2DD4BF',
+              },
+              orange: {
+                DEFAULT: '#C2410C',
+                hover: '#9A3412',
+                light: '#FB923C',
+                lightHover: '#FDBA74',
+              }
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root {
+      color-scheme: light dark;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+
+    /* Estilos del Bloque de Prompt (Tokyo Night) */
+    .prompt-card {
+      background-color: #1a1b26;
+      border: 1px solid rgba(74, 85, 104, 0.4);
+      font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+    }
+
+    .dark .prompt-card {
+      background-color: #13141f;
+      border-color: rgba(51, 65, 85, 0.6);
+    }
+
+    .token-role {
+      color: #2dd4bf;
+      font-weight: 600;
+    }
+
+    .token-param {
+      color: #fb923c;
+      font-weight: 600;
+    }
+
+    .token-tag {
+      color: #38bdf8;
+      font-weight: 500;
+    }
+
+    .token-string {
+      color: #9ece6a;
+    }
+
+    .token-comment {
+      color: #64748b;
+      font-style: italic;
+    }
+
+    .token-keyword {
+      color: #bb9af7;
+      font-weight: 600;
+    }
+  </style>
+
+  <!-- Script previo para evitar parpadeo de tema (FOUC) -->
+  <script>
+    if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  </script>
+</head>
+
+<body
+  class="bg-slate-50 text-slate-900 dark:bg-[#0c1322] dark:text-slate-100 font-sans min-h-screen flex flex-col antialiased transition-colors duration-200">
+
+  <!-- ========================================== -->
+  <!-- BARRA SUPERIOR (TOP BAR)                   -->
+  <!-- ========================================== -->
+  <header
+    class="w-full border-b border-slate-200/60 dark:border-slate-800/60 bg-slate-50/90 dark:bg-[#0c1322]/90 backdrop-blur-md sticky top-0 z-40">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+
+      <div class="flex items-center gap-4">
+        <!-- Regreso a Recursos -->
+        <a href="4-otros-recursos.html"
+          class="flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors group">
+          <svg class="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" fill="none" stroke="currentColor"
+            viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path>
+          </svg>
+          <span>Recursos</span>
+        </a>
+
+        <span class="text-slate-300 dark:text-slate-700">|</span>
+
+        <!-- Logo / Título de sección -->
+        <span class="font-bold text-slate-900 dark:text-white tracking-tight text-base truncate">
+          Tema 4 · <span class="text-orange-600 dark:text-orange-400">Guía Cursor</span>
+        </span>
+      </div>
+
+      <!-- Selector de Tema Claro/Oscuro -->
+      <button id="theme-toggle" type="button" aria-label="Cambiar tema claro / oscuro"
+        class="w-10 h-10 flex items-center justify-center rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-800/80 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-colors">
+        <svg id="theme-icon-sun" class="w-5 h-5 hidden dark:block text-white" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd"
+            d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"
+            clip-rule="evenodd"></path>
+        </svg>
+        <svg id="theme-icon-moon" class="w-5 h-5 block dark:hidden text-slate-700" fill="currentColor"
+          viewBox="0 0 20 20">
+          <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+        </svg>
+      </button>
+
+    </div>
+  </header>
+
+  <!-- ========================================== -->
+  <!-- CONTENIDO DEL DOCUMENTO                   -->
+  <!-- ========================================== -->
+  <main class="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
+
+    <!-- PORTADA / HERO -->
+    <div class="bg-white dark:bg-[#1a2333]/90 rounded-2xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-4">
+      <div class="flex items-center gap-3">
+        <img src="assets/cursor.svg" alt="Cursor IDE" class="w-9 h-9 object-contain" />
+        <span class="px-3 py-1 rounded-full text-xs font-mono font-medium bg-orange-100 dark:bg-orange-950/60 text-orange-700 dark:text-orange-300 border border-orange-200/60 dark:border-orange-900/60">
+          Guía Técnica · 4.2
+        </span>
+      </div>
+      
+      <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+        Cursor para Programar con IA
+      </h1>
+      <p class="text-lg sm:text-xl font-medium text-orange-600 dark:text-orange-400">
+        Avanza más rápido sin dejar de entender lo que estás construyendo
+      </p>
+      <p class="text-slate-600 dark:text-slate-300 leading-relaxed text-base">
+        Abres un proyecto que apenas conoces, le pides al agente que modifique cosas y esperas a ver qué ocurre. El problema llega después, cuando tienes diez archivos cambiados y no sabes qué ha cambiado ni por qué. Esta guía enseña a abrir un repositorio, entender cómo funciona, realizar un cambio pequeño y acotado con IA y revisar el resultado antes de aceptarlo.
+      </p>
+
+      <div class="p-4 rounded-xl bg-orange-50 dark:bg-orange-950/30 border border-orange-200/70 dark:border-orange-900/50 text-sm text-slate-800 dark:text-slate-200 flex items-start gap-3">
+        <span class="text-lg shrink-0">💡</span>
+        <div>
+          <strong class="font-semibold text-orange-900 dark:text-orange-300">Principio clave:</strong> <span class="italic">Deja que Cursor te quite trabajo, no criterio.</span> Úsalo para entender mejor el proyecto, acotar el cambio, revisar el plan y validar lo que ha hecho antes de aceptarlo.
+        </div>
+      </div>
+    </div>
+
+    <!-- SECCIÓN 1 -->
+    <section class="bg-white dark:bg-[#1a2333]/90 rounded-2xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-4">
+      <div class="flex items-center gap-3">
+        <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-orange-500/10 text-orange-600 dark:text-orange-400 font-mono font-bold text-sm border border-orange-500/30 shrink-0">1</span>
+        <h2 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+          ¿Qué es Cursor y por qué tantos developers lo están usando?
+        </h2>
+      </div>
+      <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+        Basado en VS Code, Cursor mantiene todo lo familiar (explorador, terminal, extensiones), pero integra la IA con <strong>contexto completo de tu proyecto</strong>. No es solo un chat: busca archivos, comprende cómo se relacionan entre ellos y realiza cambios directos sobre el árbol de código.
+      </p>
+      <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+        Esto evita el constante viaje de ida y vuelta a ChatGPT copiando trozos descontextualizados. Pero cuanto más contexto y capacidad de actuación le das a la IA, más criterio necesitas tú para dirigirla.
+      </p>
+    </section>
+
+    <!-- SECCIÓN 2 -->
+    <section class="bg-white dark:bg-[#1a2333]/90 rounded-2xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-4">
+      <div class="flex items-center gap-3">
+        <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-orange-500/10 text-orange-600 dark:text-orange-400 font-mono font-bold text-sm border border-orange-500/30 shrink-0">2</span>
+        <h2 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+          Entiende el proyecto antes de cambiar código
+        </h2>
+      </div>
+      <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+        En lugar de pedir código de inmediato o abrir carpetas a ciegas, utiliza Cursor para investigar el proyecto y construir tu primer mapa mental:
+      </p>
+
+      <!-- PROMPT DE EJEMPLO: MAPA DEL PROYECTO -->
+      <div class="prompt-card rounded-xl overflow-hidden shadow-lg">
+        <div class="px-4 py-2.5 bg-slate-900 border-b border-slate-800 flex items-center justify-between text-xs">
+          <span class="text-slate-400 font-mono">Prompt · Mapeo de Arquitectura y Módulos en Cursor</span>
+          <button onclick="copyPrompt('prompt-cursor-1', this)"
+            class="px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors flex items-center gap-1.5 font-mono text-xs border border-slate-700/60">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+            <span>Copiar Prompt</span>
+          </button>
+        </div>
+        <pre id="prompt-cursor-1" class="p-4 text-xs sm:text-sm text-slate-200 overflow-x-auto leading-relaxed whitespace-pre-wrap"><span class="token-role">Explícame cómo está organizado este proyecto antes de modificar nada.</span>
+
+<span class="token-param">Quiero entender:</span>
+1. Cuál es el punto de entrada.
+2. Qué carpetas y módulos son los más importantes.
+3. Cómo se relacionan entre ellos.
+4. Dónde está la lógica principal.
+5. Qué archivos debería revisar primero para entender el proyecto.
+
+<span class="token-keyword">No modifiques ningún archivo.</span></pre>
+      </div>
+
+      <p class="text-xs text-slate-500 dark:text-slate-400 italic">
+        Consejo: Cuando Cursor te señale los archivos clave, ábrelos, léelos y verifica que lo que te cuenta coincide con el código real.
+      </p>
+    </section>
+
+    <!-- SECCIÓN 3 -->
+    <section class="bg-white dark:bg-[#1a2333]/90 rounded-2xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-4">
+      <div class="flex items-center gap-3">
+        <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-orange-500/10 text-orange-600 dark:text-orange-400 font-mono font-bold text-sm border border-orange-500/30 shrink-0">3</span>
+        <h2 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+          Empieza por un cambio pequeño que puedas revisar
+        </h2>
+      </div>
+      <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+        No pidas a Cursor que cambie media aplicación de golpe. Cuanto mayor sea el cambio, más difícil será comprobar si ha tomado buenas decisiones arquitectónicas. Comienza por una tarea acotada:
+      </p>
+
+      <div class="prompt-card rounded-xl overflow-hidden shadow-lg">
+        <div class="px-4 py-2.5 bg-slate-900 border-b border-slate-800 flex items-center justify-between text-xs">
+          <span class="text-slate-400 font-mono">Prompt · Tarea Acotada con Restricciones Claras</span>
+          <button onclick="copyPrompt('prompt-cursor-2', this)"
+            class="px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors flex items-center gap-1.5 font-mono text-xs border border-slate-700/60">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+            <span>Copiar Prompt</span>
+          </button>
+        </div>
+        <pre id="prompt-cursor-2" class="p-4 text-xs sm:text-sm text-slate-200 overflow-x-auto leading-relaxed whitespace-pre-wrap"><span class="token-role">Quiero evitar que una tarea pueda guardarse sin título.</span>
+
+<span class="token-param">Antes de modificar código:</span>
+Revisa cómo se crean actualmente las tareas e identifica qué archivos intervienen en ese proceso.
+
+<span class="token-tag">El cambio debe cumplir estas condiciones:</span>
+1. No se puede guardar una tarea si el título está vacío.
+2. Tampoco si únicamente contiene espacios.
+3. Mantén la arquitectura y las tecnologías actuales.
+4. No modifiques otras funcionalidades que no estén relacionadas con esta tarea.
+
+<span class="token-keyword">Antes de implementar nada, explícame brevemente cómo lo harías.</span></pre>
+      </div>
+    </section>
+
+    <!-- SECCIÓN 4 -->
+    <section class="bg-white dark:bg-[#1a2333]/90 rounded-2xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-4">
+      <div class="flex items-center gap-3">
+        <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-orange-500/10 text-orange-600 dark:text-orange-400 font-mono font-bold text-sm border border-orange-500/30 shrink-0">4</span>
+        <h2 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+          Plan Mode en Cursor: Revisa antes de tocar código
+        </h2>
+      </div>
+      <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+        Desde el campo de entrada del agente, pulsa <kbd class="px-2 py-1 rounded bg-slate-200 dark:bg-slate-800 text-xs font-mono font-bold text-slate-800 dark:text-slate-200">Shift + Tab</kbd> para activar <strong>Plan Mode</strong>. Cursor analizará el proyecto, formulará preguntas aclaratorias y preparará un plan antes de generar código.
+      </p>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+        <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-[#121927] border border-slate-200/80 dark:border-slate-800/80">
+          <strong class="text-orange-600 dark:text-orange-400 font-mono">1. ¿Objetivo claro?</strong> ¿Ha entendido qué resultado esperas?
+        </div>
+        <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-[#121927] border border-slate-200/80 dark:border-slate-800/80">
+          <strong class="text-orange-600 dark:text-orange-400 font-mono">2. ¿Archivos justos?</strong> ¿Toca solo los archivos necesarios?
+        </div>
+        <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-[#121927] border border-slate-200/80 dark:border-slate-800/80">
+          <strong class="text-orange-600 dark:text-orange-400 font-mono">3. ¿Arquitectura?</strong> ¿Respeta los patrones del repo?
+        </div>
+        <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-[#121927] border border-slate-200/80 dark:border-slate-800/80">
+          <strong class="text-orange-600 dark:text-orange-400 font-mono">4. ¿Tests y pruebas?</strong> ¿Cómo comprobará que funciona?
+        </div>
+      </div>
+    </section>
+
+    <!-- SECCIÓN 5 -->
+    <section class="bg-white dark:bg-[#1a2333]/90 rounded-2xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-4">
+      <div class="flex items-center gap-3">
+        <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-orange-500/10 text-orange-600 dark:text-orange-400 font-mono font-bold text-sm border border-orange-500/30 shrink-0">5</span>
+        <h2 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+          Deja que implemente y audita los cambios
+        </h2>
+      </div>
+      <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+        Usa <strong>Diff View</strong> para ver cambios archivo a archivo y <strong>Review Changes</strong> para revisar el conjunto global antes de aceptar. Si encuentras algo que no entiendes, pídele explicaciones:
+      </p>
+
+      <div class="prompt-card rounded-xl overflow-hidden shadow-lg">
+        <div class="px-4 py-2.5 bg-slate-900 border-b border-slate-800 flex items-center justify-between text-xs">
+          <span class="text-slate-400 font-mono">Prompt · Auditoría de Diff y Evaluación de Riesgos</span>
+          <button onclick="copyPrompt('prompt-cursor-3', this)"
+            class="px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors flex items-center gap-1.5 font-mono text-xs border border-slate-700/60">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+            <span>Copiar Prompt</span>
+          </button>
+        </div>
+        <pre id="prompt-cursor-3" class="p-4 text-xs sm:text-sm text-slate-200 overflow-x-auto leading-relaxed whitespace-pre-wrap"><span class="token-role">Explícame estos cambios antes de que los acepte.</span>
+
+<span class="token-param">Quiero entender:</span>
+1. Qué has modificado y por qué.
+2. Qué alternativas había.
+3. Qué riesgos tiene esta solución.
+4. Qué podría romperse.
+
+<span class="token-tag">No realices nuevos cambios todavía.</span></pre>
+      </div>
+    </section>
+
+    <!-- NAVEGACIÓN INFERIOR ENTRE RECURSOS -->
+    <div class="pt-6 border-t border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between gap-4">
+      <a href="4-1-guia-antigravity.html"
+        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-sm font-medium transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+        <span>Anterior: Guía Antigravity</span>
+      </a>
+
+      <a href="4-3-guia-notebooklm.html"
+        class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-500 text-white text-sm font-semibold transition-colors shadow-sm">
+        <span>Siguiente: Guía NotebookLM</span>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+      </a>
+    </div>
+
+  </main>
+
+  <!-- PIE DE PÁGINA -->
+  <footer class="mt-auto py-8 text-center text-xs text-slate-500 dark:text-slate-500 border-t border-slate-200/60 dark:border-slate-800/60">
+    <div class="max-w-4xl mx-auto px-4">
+      Apuntes de la asignatura Vibe Coding — ESI Valladolid
+    </div>
+  </footer>
+
+  <!-- SCRIPT DE COPIADO Y TEMA -->
+  <script>
+    function copyPrompt(id, btn) {
+      const text = document.getElementById(id).innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = `<svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg><span class="text-emerald-400">¡Copiado!</span>`;
+        btn.classList.add('bg-emerald-950/60', 'border-emerald-800/80');
+        setTimeout(() => {
+          btn.innerHTML = originalHtml;
+          btn.classList.remove('bg-emerald-950/60', 'border-emerald-800/80');
+        }, 1800);
+      });
+    }
+
+    const themeToggleBtn = document.getElementById('theme-toggle');
+    themeToggleBtn.addEventListener('click', () => {
+      if (document.documentElement.classList.contains('dark')) {
+        document.documentElement.classList.remove('dark');
+        localStorage.setItem('theme', 'light');
+      } else {
+        document.documentElement.classList.add('dark');
+        localStorage.setItem('theme', 'dark');
+      }
+    });
+  </script>
+
+</body>
+</html>

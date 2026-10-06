@@ -1,0 +1,1535 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <title>Tarea 1 - Porfolio — Apuntes de Vibe Coding</title>
+  <meta name="description" content="Tarea 1 - Porfolio: Instalación, Markdown, Prompt inicial y Referencias.">
+
+  <!-- Tipografía: Inter y JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+            mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+          },
+          colors: {
+            brand: {
+              teal: {
+                DEFAULT: '#0D9488',
+                hover: '#0F766E',
+                light: '#14B8A6',
+                lightHover: '#2DD4BF',
+              },
+              orange: {
+                DEFAULT: '#C2410C',
+                hover: '#9A3412',
+                light: '#FB923C',
+                lightHover: '#FDBA74',
+              }
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root {
+      color-scheme: light dark;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+
+    /* Mini-rail lateral en escritorio */
+    .mini-rail-text {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease-in-out;
+      white-space: nowrap;
+    }
+
+    #desktop-sidebar:hover .mini-rail-text {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* Estilos del Bloque de Prompt (Tokyo Night) */
+    .prompt-card {
+      background-color: #1a1b26;
+      border: 1px solid rgba(74, 85, 104, 0.4);
+      font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+    }
+
+    .dark .prompt-card {
+      background-color: #13141f;
+      border-color: rgba(51, 65, 85, 0.6);
+    }
+
+    /* Resaltado de sintaxis */
+    .token-role {
+      color: #2dd4bf;
+      font-weight: 600;
+    }
+
+    .token-param {
+      color: #fb923c;
+      font-weight: 600;
+    }
+
+    .token-tag {
+      color: #38bdf8;
+      font-weight: 500;
+    }
+
+    .token-string {
+      color: #9ece6a;
+    }
+
+    .token-comment {
+      color: #64748b;
+      font-style: italic;
+    }
+
+    .token-keyword {
+      color: #bb9af7;
+      font-weight: 600;
+    }
+
+    /* Animación de entrada de vista */
+    .slide-view {
+      display: none;
+      animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .slide-view.active {
+      display: block;
+    }
+
+    .slide-view.active.flex-slide {
+      display: flex;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(4px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+
+  <!-- Script preventivo FOUC -->
+  <script>
+    if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  </script>
+</head>
+
+<body
+  class="bg-slate-50 text-slate-900 dark:bg-[#0c1322] dark:text-slate-100 font-sans min-h-screen flex flex-col antialiased transition-colors duration-200">
+
+  <!-- ========================================== -->
+  <!-- BARRA SUPERIOR (TOP BAR)                   -->
+  <!-- ========================================== -->
+  <header
+    class="sticky top-0 z-40 w-full bg-white/90 dark:bg-[#0c1322]/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 transition-colors duration-200">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+
+      <!-- Izquierda: Botón Menú Móvil + Volver a Índice + Título -->
+      <div class="flex items-center gap-3">
+        <button id="mobile-menu-btn" type="button" aria-label="Abrir menú de apartados"
+          class="md:hidden flex items-center justify-center w-10 h-10 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/80 focus:outline-none focus:ring-2 focus:ring-teal-500">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+          </svg>
+        </button>
+
+        <a href="index.html"
+          class="flex items-center gap-2 px-3 py-1.5 rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors text-sm font-medium">
+          <svg class="w-4 h-4 text-teal-600 dark:text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18">
+            </path>
+          </svg>
+          <span class="font-semibold text-slate-900 dark:text-white">Índice</span>
+        </a>
+
+        <div class="h-4 w-px bg-slate-200 dark:bg-slate-800 hidden sm:block"></div>
+
+        <span class="font-bold text-slate-900 dark:text-white text-base hidden sm:inline">Tarea 1 - Porfolio</span>
+      </div>
+
+      <!-- Selector de Tema Claro/Oscuro -->
+      <button id="theme-toggle" type="button" aria-label="Cambiar tema claro / oscuro"
+        class="w-10 h-10 flex items-center justify-center rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-800/80 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-colors">
+        <svg id="theme-icon-sun" class="w-5 h-5 hidden dark:block text-white" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd"
+            d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"
+            clip-rule="evenodd"></path>
+        </svg>
+        <svg id="theme-icon-moon" class="w-5 h-5 block dark:hidden text-slate-700" fill="currentColor"
+          viewBox="0 0 20 20">
+          <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+        </svg>
+      </button>
+
+    </div>
+  </header>
+
+  <!-- ========================================== -->
+  <!-- BARRA LATERAL DESKTOP (MINI-RAIL)          -->
+  <!-- ========================================== -->
+  <aside id="desktop-sidebar" aria-label="Navegación de apartados"
+    class="hidden md:flex flex-col fixed top-16 left-0 h-[calc(100vh-4rem)] w-16 hover:w-64 bg-white/95 dark:bg-[#0f172a]/95 backdrop-blur-md border-r border-slate-200/80 dark:border-slate-800/80 z-30 transition-all duration-300 ease-in-out shadow-sm hover:shadow-2xl overflow-x-hidden overflow-y-auto group">
+
+    <div class="px-4 py-4 border-b border-slate-100 dark:border-slate-800">
+      <h2 class="mini-rail-text text-base font-bold text-slate-900 dark:text-white tracking-tight">
+        Tarea 1 - Porfolio
+      </h2>
+    </div>
+
+    <nav class="flex-1 py-3 space-y-1 px-2 text-xs">
+      <!-- Encabezado 1.1 -->
+      <div class="px-2 pt-1 pb-1">
+        <span
+          class="mini-rail-text text-[10px] font-bold uppercase tracking-wider text-teal-600 dark:text-teal-400">1.1.
+          Usar LLMs en un IDE</span>
+      </div>
+
+      <!-- Instalación -->
+      <button onclick="goToSlide(0)" data-sidebar-target="0"
+        class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left transition-colors">
+        <span
+          class="flex-shrink-0 w-6 h-6 flex items-center justify-center font-mono font-semibold text-xs rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 sidebar-num">1</span>
+        <span class="mini-rail-text truncate font-medium">Instalación</span>
+      </button>
+
+      <!-- Interfaz de Antigravity IDE -->
+      <button onclick="goToSlide(1)" data-sidebar-target="1"
+        class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left transition-colors">
+        <span
+          class="flex-shrink-0 w-6 h-6 flex items-center justify-center font-mono font-semibold text-xs rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 sidebar-num">2</span>
+        <span class="mini-rail-text truncate font-medium">Interfaz de Antigravity IDE</span>
+      </button>
+
+      <!-- ¿Qué es Markdown? -->
+      <button onclick="goToSlide(2)" data-sidebar-target="2"
+        class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left transition-colors">
+        <span
+          class="flex-shrink-0 w-6 h-6 flex items-center justify-center font-mono font-semibold text-xs rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 sidebar-num">3</span>
+        <span class="mini-rail-text truncate font-medium">¿Qué es Markdown?</span>
+      </button>
+
+      <!-- Prompt inicial -->
+      <button onclick="goToSlide(3)" data-sidebar-target="3"
+        class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left transition-colors">
+        <span
+          class="flex-shrink-0 w-6 h-6 flex items-center justify-center font-mono font-semibold text-xs rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 sidebar-num">4</span>
+        <span class="mini-rail-text truncate font-medium">Prompt inicial</span>
+      </button>
+
+      <!-- Elección de web -->
+      <button onclick="goToSlide(4)" data-sidebar-target="4"
+        class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left transition-colors">
+        <span
+          class="flex-shrink-0 w-6 h-6 flex items-center justify-center font-mono font-semibold text-xs rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 sidebar-num">5</span>
+        <span class="mini-rail-text truncate font-medium">Elección de web</span>
+      </button>
+
+      <div class="my-2 border-t border-slate-100 dark:border-slate-800"></div>
+
+      <!-- Encabezado 1.2 -->
+      <div class="px-2 pt-1 pb-1">
+        <span
+          class="mini-rail-text text-[10px] font-bold uppercase tracking-wider text-teal-600 dark:text-teal-400">1.2.
+          Git y GitHub</span>
+      </div>
+
+      <!-- Historial de versiones -->
+      <button onclick="goToSlide(5)" data-sidebar-target="5"
+        class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left transition-colors">
+        <span
+          class="flex-shrink-0 w-6 h-6 flex items-center justify-center font-mono font-semibold text-xs rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 sidebar-num">6</span>
+        <span class="mini-rail-text truncate font-medium">Historial de versiones</span>
+      </button>
+
+      <!-- Diferencia entre Git y GitHub -->
+      <button onclick="goToSlide(6)" data-sidebar-target="6"
+        class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left transition-colors">
+        <span
+          class="flex-shrink-0 w-6 h-6 flex items-center justify-center font-mono font-semibold text-xs rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 sidebar-num">7</span>
+        <span class="mini-rail-text truncate font-medium">Git vs GitHub</span>
+      </button>
+
+      <!-- Configuración en el IDE -->
+      <button onclick="goToSlide(7)" data-sidebar-target="7"
+        class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left transition-colors">
+        <span
+          class="flex-shrink-0 w-6 h-6 flex items-center justify-center font-mono font-semibold text-xs rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 sidebar-num">8</span>
+        <span class="mini-rail-text truncate font-medium">Configuración en el IDE</span>
+      </button>
+
+      <!-- ¿Qué son las ramas? -->
+      <button onclick="goToSlide(8)" data-sidebar-target="8"
+        class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left transition-colors">
+        <span
+          class="flex-shrink-0 w-6 h-6 flex items-center justify-center font-mono font-semibold text-xs rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 sidebar-num">9</span>
+        <span class="mini-rail-text truncate font-medium">¿Qué son las ramas?</span>
+      </button>
+
+      <!-- Conventional Commits -->
+      <button onclick="goToSlide(9)" data-sidebar-target="9"
+        class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left transition-colors">
+        <span
+          class="flex-shrink-0 w-6 h-6 flex items-center justify-center font-mono font-semibold text-xs rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 sidebar-num">10</span>
+        <span class="mini-rail-text truncate font-medium">Conventional Commits</span>
+      </button>
+
+      <div class="my-2 border-t border-slate-100 dark:border-slate-800"></div>
+
+      <!-- Resumen de tema -->
+      <button onclick="goToSlide(10)" data-sidebar-target="10"
+        class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left transition-colors text-slate-400 dark:text-slate-500">
+        <span
+          class="flex-shrink-0 w-6 h-6 flex items-center justify-center font-mono font-semibold text-xs rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 sidebar-num">✓</span>
+        <span class="mini-rail-text truncate font-medium">Resumen del tema</span>
+      </button>
+    </nav>
+  </aside>
+
+  <!-- ========================================== -->
+  <!-- BARRA LATERAL MÓVIL (DRAWER)               -->
+  <!-- ========================================== -->
+  <div id="mobile-backdrop"
+    class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden transition-opacity opacity-0"></div>
+
+  <aside id="mobile-drawer"
+    class="fixed top-0 left-0 bottom-0 w-72 max-w-[80vw] bg-white dark:bg-[#0f172a] z-50 transform -translate-x-full transition-transform duration-300 ease-in-out shadow-2xl flex flex-col">
+    <div class="h-16 px-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+      <h2 class="font-bold text-slate-900 dark:text-white text-lg">Tarea 1 - Porfolio</h2>
+      <button id="close-drawer-btn"
+        class="w-10 h-10 flex items-center justify-center rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 focus:outline-none">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+
+    <nav class="flex-1 py-4 px-3 space-y-1 overflow-y-auto text-sm">
+      <div class="px-3 pt-1 pb-1">
+        <span class="text-[11px] font-bold uppercase tracking-wider text-teal-600 dark:text-teal-400">1.1. Usar LLMs en
+          un IDE</span>
+      </div>
+      <button onclick="goToSlide(0); closeMobileMenu();"
+        class="mobile-drawer-btn w-full text-left px-4 py-2 rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">
+        Instalación
+      </button>
+      <button onclick="goToSlide(1); closeMobileMenu();"
+        class="mobile-drawer-btn w-full text-left px-4 py-2 rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">
+        Interfaz de Antigravity IDE
+      </button>
+      <button onclick="goToSlide(2); closeMobileMenu();"
+        class="mobile-drawer-btn w-full text-left px-4 py-2 rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">
+        ¿Qué es Markdown?
+      </button>
+      <button onclick="goToSlide(3); closeMobileMenu();"
+        class="mobile-drawer-btn w-full text-left px-4 py-2 rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">
+        Prompt inicial
+      </button>
+      <button onclick="goToSlide(4); closeMobileMenu();"
+        class="mobile-drawer-btn w-full text-left px-4 py-2 rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">
+        Elección de web
+      </button>
+
+      <div class="my-2 border-t border-slate-200 dark:border-slate-800"></div>
+
+      <div class="px-3 pt-1 pb-1">
+        <span class="text-[11px] font-bold uppercase tracking-wider text-teal-600 dark:text-teal-400">1.2. Git y
+          GitHub</span>
+      </div>
+      <button onclick="goToSlide(5); closeMobileMenu();"
+        class="mobile-drawer-btn w-full text-left px-4 py-2 rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">
+        Historial de versiones
+      </button>
+      <button onclick="goToSlide(6); closeMobileMenu();"
+        class="mobile-drawer-btn w-full text-left px-4 py-2 rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">
+        Diferencia entre Git y GitHub
+      </button>
+      <button onclick="goToSlide(7); closeMobileMenu();"
+        class="mobile-drawer-btn w-full text-left px-4 py-2 rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">
+        Configuración en Antigravity IDE
+      </button>
+      <button onclick="goToSlide(8); closeMobileMenu();"
+        class="mobile-drawer-btn w-full text-left px-4 py-2 rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">
+        ¿Qué son las ramas?
+      </button>
+      <button onclick="goToSlide(9); closeMobileMenu();"
+        class="mobile-drawer-btn w-full text-left px-4 py-2 rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">
+        Conventional Commits
+      </button>
+
+      <div class="my-2 border-t border-slate-200 dark:border-slate-800"></div>
+
+      <button onclick="goToSlide(10); closeMobileMenu();"
+        class="mobile-drawer-btn w-full text-left px-4 py-2 rounded-xl text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800">
+        Resumen del tema
+      </button>
+    </nav>
+  </aside>
+
+  <!-- ========================================== -->
+  <!-- CONTENIDO PRINCIPAL (MAX-W-6XL)            -->
+  <!-- ========================================== -->
+  <main class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 md:pl-24 transition-all">
+
+    <!-- ================= SLIDE 0: INSTALACIÓN ================= -->
+    <div id="slide-0" class="slide-view active space-y-6">
+      <div class="pb-4 border-b border-slate-200 dark:border-slate-800">
+        <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+          Instalación
+        </h1>
+      </div>
+
+      <div
+        class="bg-white dark:bg-[#1a2333]/90 rounded-2xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-4 text-sm sm:text-base text-slate-800 dark:text-slate-200 leading-relaxed">
+        <p>
+          La primera tarea consiste en familiarizarnos con el IDE introducir el primer prom y replicar una página web de
+          portfolio para poder trabajar sobre ella. primero debemos instalar antigravity 2.0 y antigravity IDE.
+        </p>
+
+        <!-- Logos y enlaces de los programas -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 pb-2">
+          <!-- Antigravity 2.0 (Fondo blanco) -->
+          <div
+            class="p-5 rounded-2xl bg-white border border-slate-200 dark:border-slate-700/80 shadow-sm flex flex-col items-center justify-between text-center gap-4 transition-all hover:shadow-md">
+            <div class="flex flex-col items-center justify-center">
+              <img src="assets/antigravity.svg" alt="Antigravity 2.0" class="w-12 h-12 mb-3 object-contain" />
+              <span class="font-semibold text-sm text-slate-900">Antigravity 2.0</span>
+            </div>
+            <a href="https://antigravity.google/" target="_blank" rel="noopener noreferrer"
+              class="w-full inline-flex items-center justify-between gap-2 px-4 py-2.5 rounded-xl bg-slate-50 border-2 border-teal-600 hover:border-teal-500 hover:bg-teal-50 text-teal-700 font-bold text-xs sm:text-sm transition-all shadow-sm hover:shadow group">
+              <span class="truncate">https://antigravity.google/</span>
+              <svg class="w-4 h-4 text-teal-600 group-hover:translate-x-1 transition-transform shrink-0" fill="none"
+                stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3">
+                </path>
+              </svg>
+            </a>
+          </div>
+
+          <!-- Antigravity IDE (Fondo negro) -->
+          <div
+            class="p-5 rounded-2xl bg-slate-950 border border-slate-800 dark:border-slate-700/80 shadow-sm flex flex-col items-center justify-between text-center gap-4 transition-all hover:shadow-md">
+            <div class="flex flex-col items-center justify-center">
+              <img src="assets/antigravity.svg" alt="Antigravity IDE" class="w-12 h-12 mb-3 object-contain" />
+              <span class="font-semibold text-sm text-white">Antigravity IDE</span>
+            </div>
+            <a href="https://antigravity.google/product/antigravity-ide/" target="_blank" rel="noopener noreferrer"
+              class="w-full inline-flex items-center justify-between gap-2 px-4 py-2.5 rounded-xl bg-slate-900 border-2 border-teal-400 hover:border-teal-300 hover:bg-slate-800 text-[#2dd4bf] font-bold text-xs sm:text-sm transition-all shadow-sm hover:shadow group">
+              <span class="truncate">https://antigravity.google/product/antigravity-ide/</span>
+              <svg class="w-4 h-4 text-teal-400 group-hover:translate-x-1 transition-transform shrink-0" fill="none"
+                stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3">
+                </path>
+              </svg>
+            </a>
+          </div>
+        </div>
+
+        <p>
+          Primero debemos configurar la cuenta de google (usaremos la de la escuela ya que hace falta gemini pro) así
+          que creamos.
+        </p>
+
+        <!-- Banner de Aviso Literal -->
+        <div
+          class="bg-orange-50/90 dark:bg-[#2a170f]/90 border-l-4 border-orange-500 p-4 rounded-r-xl text-xs sm:text-sm text-orange-950 dark:text-orange-200">
+          <strong>AVISO:</strong> Si la tenemos metida en el móvil nos va a dar fallo, mandadme un email si os pasa
+          indicando el sistema operativo y os digo cómo se arregla porque es un jaleo. Ahora no os voy a contestar al
+          momento así que porfa haced las cosas con tiempo :)
+        </div>
+      </div>
+      <div
+        class="bg-gradient-to-r from-teal-500/10 via-slate-100 dark:via-[#1a2333]/90 to-transparent rounded-2xl p-6 border border-teal-500/40 dark:border-teal-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div class="space-y-1">
+          <h3 class="font-bold text-slate-900 dark:text-white text-base">
+            Ejemplo en Github
+          </h3>
+          <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+            Consulta un ejemplo de la tarea
+          </p>
+        </div>
+
+        <a href="https://github.com/AlkemistDesign/01_Web-de-porfolio-estatica" target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center justify-between gap-3 px-5 py-3 rounded-xl bg-white dark:bg-slate-900 border-2 border-teal-600 hover:border-teal-500 dark:border-teal-400 hover:bg-teal-50 dark:hover:bg-slate-800 text-teal-700 dark:text-[#2dd4bf] font-bold text-xs sm:text-sm transition-all shadow-sm hover:shadow-md group shrink-0">
+          <span>Abrir Ejemplo en Github</span>
+          <svg class="w-4 h-4 text-teal-600 dark:text-teal-400 group-hover:translate-x-1 transition-transform"
+            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+          </svg>
+        </a>
+      </div>
+    </div>
+
+    <!-- ================= SLIDE 1: INTERFAZ DE ANTIGRAVITY IDE ================= -->
+    <div id="slide-1" class="slide-view space-y-6">
+      <div class="space-y-1 pb-4 border-b border-slate-200 dark:border-slate-800">
+        <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+          Interfaz de Antigravity IDE
+        </h1>
+      </div>
+
+      <!-- Captura Principal de la Interfaz -->
+      <div class="rounded-2xl overflow-hidden border border-slate-200/80 dark:border-slate-800 shadow-md bg-slate-950">
+        <img src="assets/interfaz Antigravity IDE.png" alt="Captura de la interfaz de Antigravity IDE"
+          class="w-full h-auto object-cover block" />
+      </div>
+
+      <!-- Explicación estructurada por zonas funcionales -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm leading-relaxed">
+
+        <!-- 1. Barra de Actividades -->
+        <div
+          class="bg-white dark:bg-[#1a2333]/90 rounded-2xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-3">
+          <div class="flex items-center gap-2">
+            <span
+              class="w-7 h-7 rounded-lg bg-teal-50 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400 font-mono font-bold text-xs flex items-center justify-center border border-teal-500/30">1</span>
+            <h2 class="font-bold text-teal-700 dark:text-[#2dd4bf] text-base">Barra de Actividades (Izquierda)</h2>
+          </div>
+          <p class="text-slate-700 dark:text-slate-300 text-xs sm:text-sm">
+            Control lateral de acceso rápido para navegar por los recursos del proyecto:
+          </p>
+          <ul class="space-y-1.5 text-xs text-slate-600 dark:text-slate-300">
+            <li class="flex items-start gap-1.5">
+              <span class="text-teal-500 font-bold">•</span>
+              <span><strong>Explorador de Archivos:</strong> Estructura de carpetas y ficheros.</span>
+            </li>
+            <li class="flex items-start gap-1.5">
+              <span class="text-teal-500 font-bold">•</span>
+              <span><strong>Búsqueda global:</strong> Localizar y reemplazar texto en el workspace.</span>
+            </li>
+            <li class="flex items-start gap-1.5">
+              <span class="text-teal-500 font-bold">•</span>
+              <span><strong>Control de Versiones (Git):</strong> Historial de cambios y commits.</span>
+            </li>
+            <li class="flex items-start gap-1.5">
+              <span class="text-teal-500 font-bold">•</span>
+              <span><strong>Run & Debug / Extensiones:</strong> Ejecución y gestión de plugins.</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- 2. Área Central / Editor -->
+        <div
+          class="bg-white dark:bg-[#1a2333]/90 rounded-2xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-3">
+          <div class="flex items-center gap-2">
+            <span
+              class="w-7 h-7 rounded-lg bg-teal-50 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400 font-mono font-bold text-xs flex items-center justify-center border border-teal-500/30">2</span>
+            <h2 class="font-bold text-teal-700 dark:text-[#2dd4bf] text-base">Área Central (Inicio y Editor)</h2>
+          </div>
+          <p class="text-slate-700 dark:text-slate-300 text-xs sm:text-sm">
+            Espacio de trabajo principal donde se visualizan y editan los archivos:
+          </p>
+          <ul class="space-y-1.5 text-xs text-slate-600 dark:text-slate-300">
+            <li class="flex items-start gap-1.5">
+              <span class="text-teal-500 font-bold">•</span>
+              <span><strong>Acciones Rápidas:</strong> Botones directos para <code
+                  class="font-mono text-[11px] bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">Open Folder</code> y
+                <code
+                  class="font-mono text-[11px] bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">Clone Repository</code>.</span>
+            </li>
+            <li class="flex items-start gap-1.5">
+              <span class="text-teal-500 font-bold">•</span>
+              <span><strong>Workspaces Recientes:</strong> Lista de proyectos previos para retomar el trabajo al
+                instante.</span>
+            </li>
+            <li class="flex items-start gap-1.5">
+              <span class="text-teal-500 font-bold">•</span>
+              <span><strong>Editor Multifuente:</strong> Al abrir ficheros, muestra el código con coloreado sintáctico y
+                pestañas.</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- 3. Panel del Agente de IA -->
+        <div
+          class="bg-white dark:bg-[#1a2333]/90 rounded-2xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-3">
+          <div class="flex items-center gap-2">
+            <span
+              class="w-7 h-7 rounded-lg bg-teal-50 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400 font-mono font-bold text-xs flex items-center justify-center border border-teal-500/30">3</span>
+            <h2 class="font-bold text-teal-700 dark:text-[#2dd4bf] text-base">Panel del Agente de IA (Derecha)</h2>
+          </div>
+          <p class="text-slate-700 dark:text-slate-300 text-xs sm:text-sm">
+            Tu copiloto y entorno de interacción en lenguaje natural para Vibe Coding:
+          </p>
+          <ul class="space-y-1.5 text-xs text-slate-600 dark:text-slate-300">
+            <li class="flex items-start gap-1.5">
+              <span class="text-teal-500 font-bold">•</span>
+              <span><strong>Caja de Prompts:</strong> Escribe instrucciones, dudas o peticiones de código.</span>
+            </li>
+            <li class="flex items-start gap-1.5">
+              <span class="text-teal-500 font-bold">•</span>
+              <span><strong>Menciones <code class="font-mono text-[11px] text-orange-600 dark:text-orange-400">@</code>
+                  y Comandos <code class="font-mono text-[11px] text-teal-600 dark:text-teal-400">/</code>:</strong>
+                Pasa contexto o lanza flujos predefinidos.</span>
+            </li>
+            <li class="flex items-start gap-1.5">
+              <span class="text-teal-500 font-bold">•</span>
+              <span><strong>Selector de Modelo:</strong> Alterna entre modelos (ej. <em>Gemini 3.7 Flash
+                  Medium</em>).</span>
+            </li>
+            <li class="flex items-start gap-1.5">
+              <span class="text-teal-500 font-bold">•</span>
+              <span><strong>Historial y Sesiones:</strong> Crea nuevas conversaciones o recupera anteriores con <code
+                  class="font-mono text-[11px] bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">+</code> y el
+                reloj.</span>
+            </li>
+          </ul>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ================= SLIDE 2: ¿QUÉ ES MARKDOWN? ================= -->
+    <div id="slide-2" class="slide-view space-y-6">
+      <div class="space-y-1 pb-4 border-b border-slate-200 dark:border-slate-800">
+        <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+          ¿Qué es Markdown?
+        </h1>
+      </div>
+
+      <!-- Definición y Por qué en Vibe Coding -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm leading-relaxed">
+        <div
+          class="bg-white dark:bg-[#1a2333]/90 rounded-2xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-3">
+          <div class="flex items-center gap-2">
+            <span class="text-xl">📝</span>
+            <h2 class="font-bold text-teal-700 dark:text-[#2dd4bf] text-base">Definición de Markdown</h2>
+          </div>
+          <p class="text-slate-700 dark:text-slate-300 text-xs sm:text-sm">
+            <strong>Markdown</strong> es un lenguaje de marcado sencillo creado por John Gruber que permite dar formato
+            al texto mediante caracteres simples y legibles en texto plano (como <code>#</code> para títulos,
+            <code>**</code> para negritas o <code>-</code> para listas).
+          </p>
+          <p class="text-slate-700 dark:text-slate-300 text-xs sm:text-sm">
+            Se convierte fácilmente a HTML estructurado y es el estándar universal en repositorios de software,
+            documentación y plataformas como GitHub.
+          </p>
+        </div>
+
+        <div
+          class="bg-white dark:bg-[#1a2333]/90 rounded-2xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-3">
+          <div class="flex items-center gap-2">
+            <span class="text-xl">🤖</span>
+            <h2 class="font-bold text-teal-700 dark:text-[#2dd4bf] text-base">¿Por qué es clave en Vibe Coding?</h2>
+          </div>
+          <ul class="space-y-2 text-xs sm:text-sm text-slate-700 dark:text-slate-300">
+            <li class="flex items-start gap-2">
+              <span class="text-teal-600 dark:text-teal-400 font-bold shrink-0">✓</span>
+              <span><strong>Estructura clara para LLMs:</strong> Los modelos entienden las jerarquías de títulos y
+                listas sin ambigüedades.</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-teal-600 dark:text-teal-400 font-bold shrink-0">✓</span>
+              <span><strong>Formato de ficheros clave:</strong> Se usa en <code
+                  class="font-mono text-xs bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">AGENTS.md</code>, <code
+                  class="font-mono text-xs bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">MEMORY.md</code>,
+                especificaciones y comandos.</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-teal-600 dark:text-teal-400 font-bold shrink-0">✓</span>
+              <span><strong>Cero sobrecarga técnica:</strong> Archivos de texto puro editables desde cualquier IDE sin
+                dependencias.</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Sintaxis Rápida de Ejemplo -->
+      <div
+        class="bg-white dark:bg-[#1a2333]/90 rounded-2xl p-5 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-3">
+        <h2 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+          Sintaxis básica de un vistazo
+        </h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs font-mono">
+          <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800">
+            <div class="text-teal-600 dark:text-teal-400 font-bold mb-1"># Encabezado 1</div>
+            <div class="text-slate-500 dark:text-slate-400 font-sans text-[11px]">Títulos principales</div>
+          </div>
+          <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800">
+            <div class="text-teal-600 dark:text-teal-400 font-bold mb-1">**texto en negrita**</div>
+            <div class="text-slate-500 dark:text-slate-400 font-sans text-[11px]">Énfasis fuerte</div>
+          </div>
+          <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800">
+            <div class="text-teal-600 dark:text-teal-400 font-bold mb-1">- elemento de lista</div>
+            <div class="text-slate-500 dark:text-slate-400 font-sans text-[11px]">Listas no ordenadas</div>
+          </div>
+          <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800">
+            <div class="text-teal-600 dark:text-teal-400 font-bold mb-1">`código inline`</div>
+            <div class="text-slate-500 dark:text-slate-400 font-sans text-[11px]">Nombres de variables y ficheros</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tarjeta con Botón Enlace Destacado (DESIGN.md Sec. 8) -->
+      <div
+        class="bg-gradient-to-r from-teal-500/10 via-slate-100 dark:via-[#1a2333]/90 to-transparent rounded-2xl p-6 border border-teal-500/40 dark:border-teal-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div class="space-y-1">
+          <h3 class="font-bold text-slate-900 dark:text-white text-base">
+            Guía de Referencia Rápida (Cheat Sheet)
+          </h3>
+          <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+            Consulta la chuleta oficial completa con todas las reglas de sintaxis de Markdown básica y extendida.
+          </p>
+        </div>
+
+        <a href="https://www.markdownguide.org/cheat-sheet/" target="_blank" rel="noopener noreferrer"
+          class="inline-flex items-center justify-between gap-3 px-5 py-3 rounded-xl bg-white dark:bg-slate-900 border-2 border-teal-600 hover:border-teal-500 dark:border-teal-400 hover:bg-teal-50 dark:hover:bg-slate-800 text-teal-700 dark:text-[#2dd4bf] font-bold text-xs sm:text-sm transition-all shadow-sm hover:shadow-md group shrink-0">
+          <span>Abrir Markdown Cheat Sheet</span>
+          <svg class="w-4 h-4 text-teal-600 dark:text-teal-400 group-hover:translate-x-1 transition-transform"
+            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+          </svg>
+        </a>
+      </div>
+    </div>
+
+    <!-- ================= SLIDE 3: PROMPT INICIAL ================= -->
+    <div id="slide-3" class="slide-view space-y-6">
+      <div class="pb-4 border-b border-slate-200 dark:border-slate-800">
+        <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+          Prompt inicial
+        </h1>
+      </div>
+
+      <div
+        class="bg-white dark:bg-[#1a2333]/90 rounded-2xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 text-sm sm:text-base text-slate-800 dark:text-slate-200 leading-relaxed">
+        <p>
+          Una vez instalados los dos programas creamos una carpeta donde vayamos a estar desarrollando los proyectos.
+          Abrimos esta carpeta con un antigravity IDE y creamos un archivo llamado agents.md. dentro de este archivo
+          vamos a pegar el siguiente prompt:
+        </p>
+      </div>
+
+      <!-- Prompt Completo Literal -->
+      <div class="prompt-card rounded-2xl overflow-hidden shadow-md"
+        data-raw-prompt="# Recreación de Diseño Web
+## Flujo de Trabajo
+Cuando el usuario proporcione una imagen de referencia (captura de pantalla) y opcionalmente algunas clases CSS o notas de estilo:
+1. **Generar** un único archivo `index.html` usando Tailwind CSS (vía CDN). Incluye todo el contenido en línea — sin archivos externos a menos que se solicite.
+2. **Capturar** la página renderizada usando Puppeteer (`npx puppeteer screenshot index.html --fullpage` o equivalente). Si la página tiene secciones distintas, captúralas individualmente también.
+3. **Comparar** tu captura de pantalla con la imagen de referencia. Busca discrepancias en:
+- Espaciado y relleno (medir en px)
+- Tamaños de fuente, grosores y alturas de línea
+- Colores (valores hex exactos)
+- Alineación y posicionamiento
+- Radios de borde, sombras y efectos
+- Comportamiento responsive
+- Tamaño y ubicación de imágenes/iconos
+4. **Corregir** cada discrepancia encontrada. Edita el código HTML/Tailwind.
+5. **Volver a capturar** y comparar de nuevo.
+6. **Repetir** los pasos 3–5 hasta que el resultado esté dentro de ~2–3px de la referencia en todas partes.
+NO te detengas después de una sola pasada. Realiza siempre al menos 2 rondas de comparación. Solo detente cuando el usuario lo diga o cuando no queden diferencias visibles.
+## Valores Técnicos Predeterminados
+- Usar Tailwind CSS vía CDN (`<script src=&quot;https://cdn.tailwindcss.com&quot;></script>`)
+- Usar imágenes de marcador de posición de `https://placehold.co/` cuando no se proporcionen imágenes de origen
+- Diseño responsive mobile-first
+- Un único archivo `index.html` a menos que el usuario solicite lo contrario
+## Reglas
+- No añadas características, secciones o contenido que no estén presentes en la imagen de referencia
+- Iguala la referencia exactamente — no &quot;mejores&quot; el diseño
+- Si el usuario proporciona clases CSS o tokens de estilo, úsalos literalmente
+- Mantén el código limpio pero no lo abstraigas demasiado — las clases de Tailwind en línea están bien
+- Al comparar capturas de pantalla, sé específico sobre lo que está mal (p. ej., &quot;el encabezado es de 32px pero la referencia muestra ~24px&quot;, &quot;el espacio entre tarjetas es de 16px pero debería ser de 24px&quot;)">
+        <div
+          class="flex items-center justify-between px-4 py-3 bg-slate-800/90 dark:bg-slate-950/90 border-b border-slate-700/60 text-xs">
+          <span class="token-tag font-mono text-xs">agents.md</span>
+          <button type="button"
+            class="copy-prompt-btn flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-700/80 hover:bg-teal-600 hover:text-white text-slate-200 text-xs font-medium border border-slate-600/60 transition-all focus:outline-none focus:ring-2 focus:ring-teal-400">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3">
+              </path>
+            </svg>
+            <span>Copiar Prompt</span>
+          </button>
+        </div>
+        <pre
+          class="prompt-content p-4 sm:p-5 text-xs font-mono text-slate-200 leading-relaxed whitespace-pre-wrap max-h-96 overflow-y-auto"><code><span class="token-keyword"># Recreación de Diseño Web</span>
+
+<span class="token-keyword">## Flujo de Trabajo</span>
+Cuando el usuario proporcione una imagen de referencia (captura de pantalla) y opcionalmente algunas clases CSS o notas de estilo:
+<span class="token-role">1.</span> <span class="token-tag">**Generar**</span> un único archivo <span class="token-param">`index.html`</span> usando Tailwind CSS (vía CDN). Incluye todo el contenido en línea — sin archivos externos a menos que se solicite.
+<span class="token-role">2.</span> <span class="token-tag">**Capturar**</span> la página renderizada usando Puppeteer (<span class="token-param">`npx puppeteer screenshot index.html --fullpage`</span> o equivalente). Si la página tiene secciones distintas, captúralas individualmente también.
+<span class="token-role">3.</span> <span class="token-tag">**Comparar**</span> tu captura de pantalla con la imagen de referencia. Busca discrepancias en:
+- Espaciado y relleno (medir en px)
+- Tamaños de fuente, grosores y alturas de línea
+- Colores (valores hex exactos)
+- Alineación y posicionamiento
+- Radios de borde, sombras y efectos
+- Comportamiento responsive
+- Tamaño y ubicación de imágenes/iconos
+<span class="token-role">4.</span> <span class="token-tag">**Corregir**</span> cada discrepancia encontrada. Edita el código HTML/Tailwind.
+<span class="token-role">5.</span> <span class="token-tag">**Volver a capturar**</span> y comparar de nuevo.
+<span class="token-role">6.</span> <span class="token-tag">**Repetir**</span> los pasos 3–5 hasta que el resultado esté dentro de ~2–3px de la referencia en todas partes.
+<span class="token-param">NO te detengas después de una sola pasada.</span> Realiza siempre al menos 2 rondas de comparación. Solo detente cuando el usuario lo diga o cuando no queden diferencias visibles.
+
+<span class="token-keyword">## Valores Técnicos Predeterminados</span>
+- Usar Tailwind CSS vía CDN (<span class="token-string">`&lt;script src="https://cdn.tailwindcss.com"&gt;&lt;/script&gt;`</span>)
+- Usar imágenes de marcador de posición de <span class="token-string">`https://placehold.co/`</span> cuando no se proporcionen imágenes de origen
+- Diseño responsive mobile-first
+- Un único archivo <span class="token-param">`index.html`</span> a menos que el usuario solicite lo contrario
+
+<span class="token-keyword">## Reglas</span>
+- No añadas características, secciones o contenido que no estén presentes en la imagen de referencia
+- Iguala la referencia exactamente — no <span class="token-string">"mejores"</span> el diseño
+- Si el usuario proporciona clases CSS o tokens de estilo, úsalos literalmente
+- Mantén el código limpio pero no lo abstraigas demasiado — las clases de Tailwind en línea están bien
+- Al comparar capturas de pantalla, sé específico sobre lo que está mal (p. ej., <span class="token-string">"el encabezado es de 32px pero la referencia muestra ~24px"</span>, <span class="token-string">"el espacio entre tarjetas es de 16px pero debería ser de 24px"</span>)</code></pre>
+      </div>
+    </div>
+
+    <!-- ================= SLIDE 4: ELECCIÓN DE WEB ================= -->
+    <div id="slide-4" class="slide-view space-y-6">
+      <div class="pb-4 border-b border-slate-200 dark:border-slate-800">
+        <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+          Elección de la web de referencia
+        </h1>
+      </div>
+
+      <div
+        class="bg-white dark:bg-[#1a2333]/90 rounded-2xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-4 text-sm sm:text-base text-slate-800 dark:text-slate-200 leading-relaxed">
+        <p>
+          Ahora elegiremos qué web queremos usar de referencia para luego editar y darle nuestra propia personalidad. Es
+          muy importante que estas webs no destaquen por su imagen, porque eso no nos lo va a coger. Nos tienen que
+          gustar por su jerarquía por su estilo visual por cómo divide la información no por imágenes o ilustraciones
+        </p>
+
+        <!-- Botones externos literales -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+          <a href="https://onepagelove.com/genre/portfolio" target="_blank" rel="noopener noreferrer"
+            class="inline-flex items-center justify-between gap-3 px-5 py-3 rounded-xl bg-white dark:bg-slate-900 border-2 border-teal-600 hover:border-teal-500 dark:border-teal-400 hover:bg-teal-50 dark:hover:bg-slate-800 text-teal-700 dark:text-[#2dd4bf] font-bold text-xs sm:text-sm transition-all shadow-sm hover:shadow group">
+            <span>https://onepagelove.com/genre/portfolio</span>
+            <svg class="w-4 h-4 text-teal-600 dark:text-teal-400 group-hover:translate-x-1 transition-transform"
+              fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3">
+              </path>
+            </svg>
+          </a>
+
+          <a href="https://www.wallofportfolios.in/" target="_blank" rel="noopener noreferrer"
+            class="inline-flex items-center justify-between gap-3 px-5 py-3 rounded-xl bg-white dark:bg-slate-900 border-2 border-teal-600 hover:border-teal-500 dark:border-teal-400 hover:bg-teal-50 dark:hover:bg-slate-800 text-teal-700 dark:text-[#2dd4bf] font-bold text-xs sm:text-sm transition-all shadow-sm hover:shadow group">
+            <span>https://www.wallofportfolios.in/</span>
+            <svg class="w-4 h-4 text-teal-600 dark:text-teal-400 group-hover:translate-x-1 transition-transform"
+              fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3">
+              </path>
+            </svg>
+          </a>
+        </div>
+
+        <p class="pt-2">
+          Ahora que tenemos la web elegida y el prompt configurado podemos sacar una captura de pantalla de la web que
+          nos haya gustado o poner directamente el link en el prompt. Por ejemplo yo usé este prompt:
+        </p>
+
+        <!-- Prompt de Alkemist -->
+        <div class="prompt-card rounded-2xl overflow-hidden shadow-md"
+          data-raw-prompt="Utilizando el flujo de agents.md y la imagen reference.jpg, crea una web para Alkemist, mi porfolio de diseño UX/UI. Utilliza placeholders para las imágenes que luego sustituiremos.">
+          <div
+            class="flex items-center justify-between px-4 py-3 bg-slate-800/90 dark:bg-slate-950/90 border-b border-slate-700/60 text-xs">
+            <span class="token-tag font-mono text-xs">prompt</span>
+            <button type="button"
+              class="copy-prompt-btn flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-700/80 hover:bg-teal-600 hover:text-white text-slate-200 text-xs font-medium border border-slate-600/60 transition-all focus:outline-none focus:ring-2 focus:ring-teal-400">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3">
+                </path>
+              </svg>
+              <span>Copiar Prompt</span>
+            </button>
+          </div>
+          <div class="prompt-content p-4 text-xs font-mono text-slate-200 leading-relaxed">
+            Utilizando el flujo de <span class="token-param">agents.md</span> y la imagen <span
+              class="token-string">reference.jpg</span>, crea una web para <span class="token-role">Alkemist</span>, mi
+            porfolio de diseño UX/UI. Utilliza placeholders para las imágenes que luego sustituiremos.
+          </div>
+        </div>
+
+        <p>
+          Podemos escribirlo así o podemos mencionar todos los archivos que estamos diciendo si los arrastramos desde la
+          izquierda hacia la ventana del chat.
+        </p>
+
+        <!-- Captura de pantalla del prompt en el IDE -->
+        <div
+          class="rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-md bg-slate-900/50">
+          <img src="assets/Captura prompt ide.png" alt="Captura del prompt y referencias en el IDE"
+            class="w-full h-auto object-cover block" />
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= SLIDE 5: HISTORIAL DE VERSIONES ================= -->
+    <div id="slide-5" class="slide-view space-y-6">
+      <div class="space-y-1 pb-4 border-b border-slate-200 dark:border-slate-800">
+        <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+          Historial de versiones
+        </h1>
+      </div>
+
+      <!-- Bloques de Introducción y Definición lado a lado -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Meme Photoshop y Pregunta introductoria -->
+        <div
+          class="bg-white dark:bg-[#1a2333]/90 rounded-2xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 flex flex-col justify-between gap-4 text-sm sm:text-base text-slate-800 dark:text-slate-200 leading-relaxed">
+          <div
+            class="rounded-xl overflow-hidden border border-slate-200/80 dark:border-slate-800 shadow-sm bg-slate-950 flex items-center justify-center">
+            <img src="assets/meme photoshop.jpg" alt="Meme de versiones finales de archivo en Photoshop"
+              class="w-full h-auto object-cover block" />
+          </div>
+          <p class="text-base font-medium text-slate-900 dark:text-white leading-snug">
+            A absolutamente todos nos ha pasado esto. ¿No sería genial poder guardar el cambio entre un archivo y otro
+            para poder recuperar versiones de manera rápida?
+          </p>
+        </div>
+
+        <!-- ¿Qué es el historial de versiones? -->
+        <div
+          class="bg-white dark:bg-[#1a2333]/90 rounded-2xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-3 flex flex-col justify-center">
+          <h2 class="font-bold text-teal-700 dark:text-[#2dd4bf] text-base">¿Qué es el historial de versiones?</h2>
+          <p class="text-sm sm:text-base text-slate-800 dark:text-slate-200 leading-relaxed">
+            Un historial de versiones es una función que guarda de forma automática los diferentes estados o cambios que
+            sufre un archivo a lo largo del tiempo.
+          </p>
+          <h2 class="font-bold text-teal-700 !mt-8 dark:text-[#2dd4bf] text-base">Para qué sirve</h2>
+          <div class="flex flex-col gap-2">
+            <!-- Recuperar información -->
+            <div
+              class="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800 space-y-1.5">
+              <div class="flex items-center gap-2">
+                <span
+                  class="w-6 h-6 rounded-lg bg-teal-100 dark:bg-teal-900/50 text-teal-700 dark:text-teal-300 font-bold text-xs flex items-center justify-center">1</span>
+                <h3 class="font-bold text-slate-900 dark:text-white text-sm">Recuperar información</h3>
+              </div>
+              <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                Permite rescatar textos, datos o elementos borrados por error.
+              </p>
+            </div>
+
+            <!-- Ver cambios -->
+            <div
+              class="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800 space-y-1.5">
+              <div class="flex items-center gap-2">
+                <span
+                  class="w-6 h-6 rounded-lg bg-teal-100 dark:bg-teal-900/50 text-teal-700 dark:text-teal-300 font-bold text-xs flex items-center justify-center">2</span>
+                <h3 class="font-bold text-slate-900 dark:text-white text-sm">Ver cambios</h3>
+              </div>
+              <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                Muestra qué se modificó, en qué fecha y quién hizo el cambio.
+              </p>
+            </div>
+
+            <!-- Restaurar estados -->
+            <div
+              class="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800 space-y-1.5">
+              <div class="flex items-center gap-2">
+                <span
+                  class="w-6 h-6 rounded-lg bg-teal-100 dark:bg-teal-900/50 text-teal-700 dark:text-teal-300 font-bold text-xs flex items-center justify-center">3</span>
+                <h3 class="font-bold text-slate-900 dark:text-white text-sm">Restaurar estados</h3>
+              </div>
+              <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                Permite volver a una versión anterior del archivo sin perder el trabajo previo.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+
+    <!-- ================= SLIDE 6: DIFERENCIA ENTRE GIT Y GITHUB ================= -->
+    <div id="slide-6" class="slide-view space-y-6">
+      <div class="space-y-1 pb-4 border-b border-slate-200 dark:border-slate-800">
+        <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+          Diferencia entre Git y Github
+        </h1>
+      </div>
+
+      <!-- Definiciones Clave -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm leading-relaxed">
+        <div
+          class="bg-white dark:bg-[#1a2333]/90 rounded-2xl p-5 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-2">
+          <div class="flex items-center gap-2">
+            <span class="font-mono font-bold text-teal-600 dark:text-teal-400 text-base">Git</span>
+          </div>
+          <p class="text-xs sm:text-sm text-slate-700 dark:text-slate-300">
+            Git es una herramienta de control de versiones.
+          </p>
+        </div>
+
+        <div
+          class="bg-white dark:bg-[#1a2333]/90 rounded-2xl p-5 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-2">
+          <div class="flex items-center gap-2">
+            <span class="font-mono font-bold text-orange-600 dark:text-orange-400 text-base">GitHub</span>
+          </div>
+          <p class="text-xs sm:text-sm text-slate-700 dark:text-slate-300">
+            GitHub es una red social con proyectos de código.
+          </p>
+        </div>
+
+        <div
+          class="bg-white dark:bg-[#1a2333]/90 rounded-2xl p-5 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-2">
+          <div class="flex items-center gap-2">
+            <span class="font-mono font-bold text-slate-900 dark:text-white text-base">Integración</span>
+          </div>
+          <p class="text-xs sm:text-sm text-slate-700 dark:text-slate-300">
+            Github utiliza Git para almacenar las versiones de los proyectos.
+          </p>
+        </div>
+      </div>
+
+      <!-- Tabla: Comparativa Directa -->
+      <div
+        class="bg-white dark:bg-[#1a2333]/90 rounded-2xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-4">
+        <h2 class="font-bold text-slate-900 dark:text-white text-base">
+          Comparativa Directa
+        </h2>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs sm:text-sm border-collapse">
+            <thead>
+              <tr class="border-b border-slate-200 dark:border-slate-700/80 bg-slate-50/80 dark:bg-slate-900/50">
+                <th class="py-3 px-4 font-bold text-slate-900 dark:text-white w-1/4">Característica</th>
+                <th class="py-3 px-4 font-bold text-teal-700 dark:text-[#2dd4bf] w-3/8">Git</th>
+                <th class="py-3 px-4 font-bold text-orange-700 dark:text-[#fb923c] w-3/8">GitHub</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60 text-slate-700 dark:text-slate-300">
+              <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                <td class="py-3.5 px-4 font-semibold text-slate-900 dark:text-white">¿Qué es?</td>
+                <td class="py-3.5 px-4">Un software de control de versiones.</td>
+                <td class="py-3.5 px-4">Una plataforma de alojamiento en la nube.</td>
+              </tr>
+              <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                <td class="py-3.5 px-4 font-semibold text-slate-900 dark:text-white">¿Dónde se ejecuta?</td>
+                <td class="py-3.5 px-4">De forma local en tu propia computadora.</td>
+                <td class="py-3.5 px-4">De forma remota en servidores de Microsoft.</td>
+              </tr>
+              <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                <td class="py-3.5 px-4 font-semibold text-slate-900 dark:text-white">Interfaz</td>
+                <td class="py-3.5 px-4">Principalmente por línea de comandos (Terminal).</td>
+                <td class="py-3.5 px-4">Interfaz web visual y amigable.</td>
+              </tr>
+              <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                <td class="py-3.5 px-4 font-semibold text-slate-900 dark:text-white">Conexión a internet</td>
+                <td class="py-3.5 px-4">No la necesita para trabajar en tu equipo.</td>
+                <td class="py-3.5 px-4">Sí la necesita para subir y compartir archivos.</td>
+              </tr>
+              <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                <td class="py-3.5 px-4 font-semibold text-slate-900 dark:text-white">Funciones extra</td>
+                <td class="py-3.5 px-4">Crear ramas, hacer commits y guardar historial.</td>
+                <td class="py-3.5 px-4">Foros de discusión, herramientas de gestión de proyectos, Pull Requests.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= SLIDE 7: CONFIGURACIÓN EN ANTIGRAVITY IDE ================= -->
+    <div id="slide-7" class="slide-view space-y-6">
+      <div class="space-y-1 pb-4 border-b border-slate-200 dark:border-slate-800">
+        <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+          ¿Cómo lo configuramos en Antigravity IDE?
+        </h1>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+        <!-- Mitad horizontal 1: Imagen del control de versiones -->
+        <div
+          class="rounded-2xl overflow-hidden border border-slate-200/80 dark:border-slate-800 shadow-md bg-slate-950">
+          <img src="assets/control de versiones.png" alt="Control de versiones en Antigravity IDE"
+            class="w-full h-auto object-cover block" />
+        </div>
+
+        <!-- Mitad horizontal 2: Explicación de los botones -->
+        <div
+          class="bg-white dark:bg-[#1a2333]/90 rounded-2xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-4 text-sm sm:text-base text-slate-800 dark:text-slate-200 leading-relaxed">
+          <p>
+            El primer botón sirve para crear un historial de versiones local, y el siguiente botón es para publicar el
+            repositorio directamente en Github. Para esta asignatura es obligatorio publicar en Github, porque quiero
+            que aprendáis a usarlo.
+          </p>
+
+          <!-- Tarjetas de desglose de botones para claridad visual -->
+          <div class="space-y-3 pt-2">
+            <div
+              class="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800 flex items-start gap-3">
+              <span
+                class="w-6 h-6 rounded-lg bg-teal-100 dark:bg-teal-900/50 text-teal-700 dark:text-teal-300 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">1</span>
+              <div class="text-xs sm:text-sm">
+                <span class="font-bold text-slate-900 dark:text-white block mb-0.5">Historial de versiones local</span>
+                <span class="text-slate-600 dark:text-slate-300">Crea e inicializa el seguimiento de versiones Git en tu
+                  máquina local.</span>
+              </div>
+            </div>
+
+            <div
+              class="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800 flex items-start gap-3">
+              <span
+                class="w-6 h-6 rounded-lg bg-orange-100 dark:bg-orange-900/50 text-orange-700 dark:text-orange-300 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">2</span>
+              <div class="text-xs sm:text-sm">
+                <span class="font-bold text-slate-900 dark:text-white block mb-0.5">Publicar en GitHub</span>
+                <span class="text-slate-600 dark:text-slate-300">Publica el repositorio directamente en tu perfil de
+                  GitHub en la nube.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= SLIDE 8: ¿QUÉ SON LAS RAMAS? ================= -->
+    <div id="slide-8" class="slide-view space-y-6">
+      <div class="space-y-1 pb-4 border-b border-slate-200 dark:border-slate-800">
+        <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+          ¿Qué son las ramas?
+        </h1>
+      </div>
+
+      <div
+        class="bg-white dark:bg-[#1a2333]/90 rounded-2xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 text-sm sm:text-base text-slate-800 dark:text-slate-200 leading-relaxed">
+        <p>
+          Aunque nosotros no vamos a usarlas debéis saberlo porque será importante en vuestro desarrollo profesional.
+          Las versiones pueden separarse, unirse, entrar en conflicto y volver hacia atrás. Un poco como el multiverso
+          de Marvel.
+        </p>
+      </div>
+
+      <!-- Imagen Ramas GitHub -->
+      <div class="rounded-2xl overflow-hidden border border-slate-200/80 dark:border-slate-800 shadow-md bg-slate-950">
+        <img src="assets/ramas github.png" alt="Esquema visual de ramas y ramificación en GitHub"
+          class="w-full h-auto object-cover block" />
+      </div>
+    </div>
+
+    <!-- ================= SLIDE 9: CONVENTIONAL COMMITS ================= -->
+    <div id="slide-9" class="slide-view space-y-6">
+      <div class="space-y-1 pb-4 border-b border-slate-200 dark:border-slate-800">
+        <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+          Conventional Commits
+        </h1>
+      </div>
+
+      <!-- Explicación breve del sistema -->
+      <div
+        class="bg-white dark:bg-[#1a2333]/90 rounded-2xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-3 text-sm sm:text-base text-slate-800 dark:text-slate-200 leading-relaxed">
+        <p>
+          <strong>Conventional Commits</strong> es una convención ligera sobre los mensajes de los commits que define un
+          conjunto de reglas estándar para crear un historial de versiones estructurado, claro y comprensible tanto por
+          humanos como por herramientas automáticas.
+        </p>
+        <p class="text-slate-600 dark:text-slate-300 text-xs sm:text-sm">
+          Sigue un formato consistente como <code
+            class="font-mono text-xs bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-teal-600 dark:text-teal-400 font-semibold">&lt;tipo&gt;(&lt;alcance&gt;): &lt;descripción&gt;</code>
+          para identificar de inmediato si un cambio es una nueva funcionalidad (<code
+            class="font-mono text-xs bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">feat</code>), una corrección de
+          errores (<code class="font-mono text-xs bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">fix</code>),
+          documentación (<code class="font-mono text-xs bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">docs</code>)
+          o tareas de mantenimiento (<code
+            class="font-mono text-xs bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">chore</code>).
+        </p>
+      </div>
+
+      <!-- Tarjeta con Botón Enlace a Conventional Commits (DESIGN.md Sec. 8) -->
+      <div
+        class="bg-gradient-to-r from-teal-500/10 via-slate-100 dark:via-[#1a2333]/90 to-transparent rounded-2xl p-5 sm:p-6 border border-teal-500/40 dark:border-teal-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div class="space-y-1">
+          <h2 class="font-bold text-slate-900 dark:text-white text-base">
+            Especificación oficial de Conventional Commits
+          </h2>
+          <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+            Aprende todos los tipos, especificaciones y ejemplos detallados en la documentación oficial en español.
+          </p>
+        </div>
+
+        <a href="https://www.conventionalcommits.org/es/v1.0.0/" target="_blank" rel="noopener noreferrer"
+          class="inline-flex items-center justify-between gap-3 px-5 py-3 rounded-xl bg-white dark:bg-slate-900 border-2 border-teal-600 hover:border-teal-500 dark:border-teal-400 hover:bg-teal-50 dark:hover:bg-slate-800 text-teal-700 dark:text-[#2dd4bf] font-bold text-xs sm:text-sm transition-all shadow-sm hover:shadow-md group shrink-0">
+          <span>Abrir Conventional Commits</span>
+          <svg class="w-4 h-4 text-teal-600 dark:text-teal-400 group-hover:translate-x-1 transition-transform"
+            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+          </svg>
+        </a>
+      </div>
+
+      <!-- Prompt de Conventional Commits -->
+      <div class="prompt-card rounded-2xl overflow-hidden shadow-md"
+        data-raw-prompt="Eres un asistente experto de Git. Tu función es inspeccionar las modificaciones locales, proponer un mensaje de commit bajo el estándar **Conventional Commits**, esperar la aprobación explícita del usuario y, solo tras recibir el visto bueno, realizar el commit y el push.
+
+---
+
+## 1. Convenciones para el Mensaje
+
+- **Formato:** `&lt;type&gt;(&lt;scope&gt;): &lt;descripción corta en imperativo&gt;`
+- **Idioma predeterminado:** Inglés (salvo indicación explícita en español).
+- **Tipos válidos:**
+  - `feat`: Nuevas características, páginas, traducciones, elementos de interfaz o meta tags.
+  - `fix`: Corrección de bugs, enlaces rotos, fallos de layout, problemas de accesibilidad (a11y) o referencias a archivos.
+  - `perf`: Mejoras de rendimiento (optimización de assets, reducción de requests, fuentes locales).
+  - `docs`: Actualización de textos, documentación o descripciones de contenido.
+  - `chore`: Mantenimiento, dependencias o renombrado de archivos sin cambio de lógica.
+  - `test`: Pruebas automatizadas o tests temporales.
+  - `style`: Formateo, espacios en blanco o corrección de erratas sin cambios funcionales.
+- **Reglas del Scope (`&lt;scope&gt;`):**
+  - Nunca incluyas extensiones de archivo (`.html`, `.js`, `.css`). Usa el nombre de la sección o módulo (`layout`, `ui`, `nav`, `a11y`, `assets`, `auth`).
+  - Omite el scope si el impacto es global y transversal.
+
+---
+
+## 2. Procedimiento de Ejecución (Paso a Paso)
+
+### Paso 1: Inspeccionar el estado del repositorio
+Ejecuta de forma secuencial en la terminal:
+1. `git status` para listar archivos modificados, agregados o eliminados.
+2. `git diff` (y `git diff --cached` si aplica) para analizar los cambios exactos de código.
+
+*Si no hay cambios pendientes para commitear, indícaselo al usuario y detén la ejecución.*
+
+---
+
+### Paso 2: Proponer el mensaje y detenerse
+1. Genera la mejor propuesta de mensaje según los cambios detectados.
+2. Muestra la propuesta en un bloque de código y, si el cambio es extenso, añade una opción secundaria con cuerpo explicativo (*commit body*).
+3. **PUNTO DE DETENCIÓN OBLIGATORIO:** No ejecutes ningún comando de modificación. Pregunta al usuario:
+   &gt; *&quot;¿Apruebas este mensaje para hacer `commit` y `push` a GitHub, o prefieres ajustar algo?&quot;*
+
+---
+
+### Paso 3: Confirmación y Push
+**Solo si el usuario responde afirmativamente** (por ejemplo: &quot;sí&quot;, &quot;adelante&quot;, &quot;aprobado&quot;, &quot;ok&quot;):
+1. Ejecuta `git add -A` (o los archivos pertinentes).
+2. Ejecuta `git commit -m &quot;&lt;mensaje aprobado&gt;&quot;`.
+3. Ejecuta `git push` a la rama remota correspondiente.
+4. Muestra un resumen confirmando el hash del commit y la rama remota actualizada.
+
+**Si el usuario sugiere cambios:** Ajusta el mensaje, repite la propuesta y vuelve a pedir confirmación antes de tocar Git.">
+        <div
+          class="flex items-center justify-between px-4 py-3 bg-slate-800/90 dark:bg-slate-950/90 border-b border-slate-700/60 text-xs">
+          <span class="token-tag font-mono text-xs">generar-commit.md</span>
+          <button type="button"
+            class="copy-prompt-btn flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-700/80 hover:bg-teal-600 hover:text-white text-slate-200 text-xs font-medium border border-slate-600/60 transition-all focus:outline-none focus:ring-2 focus:ring-teal-400">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3">
+              </path>
+            </svg>
+            <span>Copiar Prompt</span>
+          </button>
+        </div>
+        <pre
+          class="prompt-content p-4 sm:p-5 text-xs font-mono text-slate-200 leading-relaxed whitespace-pre-wrap max-h-96 overflow-y-auto"><code><span class="token-role">Eres un asistente experto de Git.</span> Tu función es inspeccionar las modificaciones locales, proponer un mensaje de commit bajo el estándar <span class="token-param">**Conventional Commits**</span>, esperar la aprobación explícita del usuario y, solo tras recibir el visto bueno, realizar el commit y el push.
+
+<span class="token-comment">---</span>
+
+<span class="token-keyword">## 1. Convenciones para el Mensaje</span>
+
+- <span class="token-tag">**Formato:**</span> <span class="token-param">`&lt;type&gt;(&lt;scope&gt;): &lt;descripción corta en imperativo&gt;`</span>
+- <span class="token-tag">**Idioma predeterminado:**</span> Inglés (salvo indicación explícita en español).
+- <span class="token-tag">**Tipos válidos:**</span>
+  - <span class="token-keyword">`feat`</span>: Nuevas características, páginas, traducciones, elementos de interfaz o meta tags.
+  - <span class="token-keyword">`fix`</span>: Corrección de bugs, enlaces rotos, fallos de layout, problemas de accesibilidad (a11y) o referencias a archivos.
+  - <span class="token-keyword">`perf`</span>: Mejoras de rendimiento (optimización de assets, reducción de requests, fuentes locales).
+  - <span class="token-keyword">`docs`</span>: Actualización de textos, documentación o descripciones de contenido.
+  - <span class="token-keyword">`chore`</span>: Mantenimiento, dependencias o renombrado de archivos sin cambio de lógica.
+  - <span class="token-keyword">`test`</span>: Pruebas automatizadas o tests temporales.
+  - <span class="token-keyword">`style`</span>: Formateo, espacios en blanco o corrección de erratas sin cambios funcionales.
+- <span class="token-tag">**Reglas del Scope (`&lt;scope&gt;`):**</span>
+  - Nunca incluyas extensiones de archivo (<span class="token-string">`.html`</span>, <span class="token-string">`.js`</span>, <span class="token-string">`.css`</span>). Usa el nombre de la sección o módulo (<span class="token-param">`layout`</span>, <span class="token-param">`ui`</span>, <span class="token-param">`nav`</span>, <span class="token-param">`a11y`</span>, <span class="token-param">`assets`</span>, <span class="token-param">`auth`</span>).
+  - Omite el scope si el impacto es global y transversal.
+
+<span class="token-comment">---</span>
+
+<span class="token-keyword">## 2. Procedimiento de Ejecución (Paso a Paso)</span>
+
+<span class="token-tag">### Paso 1: Inspeccionar el estado del repositorio</span>
+Ejecuta de forma secuencial en la terminal:
+1. <span class="token-role">`git status`</span> para listar archivos modificados, agregados o eliminados.
+2. <span class="token-role">`git diff`</span> (y <span class="token-role">`git diff --cached`</span> si aplica) para analizar los cambios exactos de código.
+
+<span class="token-comment">*Si no hay cambios pendientes para commitear, indícaselo al usuario y detén la ejecución.*</span>
+
+<span class="token-comment">---</span>
+
+<span class="token-tag">### Paso 2: Proponer el mensaje y detenerse</span>
+1. Genera la mejor propuesta de mensaje según los cambios detectados.
+2. Muestra la propuesta en un bloque de código y, si el cambio es extenso, añade una opción secundaria con cuerpo explicativo (<span class="token-comment">*commit body*</span>).
+3. <span class="token-param">**PUNTO DE DETENCIÓN OBLIGATORIO:**</span> No ejecutes ningún comando de modificación. Pregunta al usuario:
+   &gt; <span class="token-string">*"¿Apruebas este mensaje para hacer `commit` y `push` a GitHub, o prefieres ajustar algo?"*</span>
+
+<span class="token-comment">---</span>
+
+<span class="token-tag">### Paso 3: Confirmación y Push</span>
+<span class="token-param">**Solo si el usuario responde afirmativamente**</span> (por ejemplo: <span class="token-string">"sí"</span>, <span class="token-string">"adelante"</span>, <span class="token-string">"aprobado"</span>, <span class="token-string">"ok"</span>):
+1. Ejecuta <span class="token-role">`git add -A`</span> (o los archivos pertinentes).
+2. Ejecuta <span class="token-role">`git commit -m "&lt;mensaje aprobado&gt;"`</span>.
+3. Ejecuta <span class="token-role">`git push`</span> a la rama remota correspondiente.
+4. Muestra un resumen confirmando el hash del commit y la rama remota actualizada.
+
+<span class="token-comment">**Si el usuario sugiere cambios:** Ajusta el mensaje, repite la propuesta y vuelve a pedir confirmación antes de tocar Git.</span></code></pre>
+      </div>
+    </div>
+
+    <!-- ================= SLIDE 10: FIN DEL TEMA (ALTO COMPLETO Y CENTRADO) ================= -->
+    <div id="slide-10"
+      class="slide-view flex-slide min-h-[calc(100vh-14rem)] flex-col items-center justify-center text-center">
+      <div class="max-w-md w-full space-y-8">
+        <div class="space-y-2">
+          <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+            Fin de la tarea 1
+          </h2>
+          <p class="text-base text-slate-600 dark:text-slate-400">
+            Ahora te toca practicar por tu cuenta y ir desarrollando tu porfolio.
+          </p>
+        </div>
+
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
+          <a href="index.html"
+            class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl font-semibold text-sm bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-900 dark:text-white transition-all">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6">
+              </path>
+            </svg>
+            <span>Volver al Índice</span>
+          </a>
+
+          <a href="4-otros-recursos.html"
+            class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl font-semibold text-sm bg-orange-600 hover:bg-orange-500 text-white shadow-md hover:shadow-lg transition-all hover:scale-105">
+            <span>Ver Otros Recursos</span>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ========================================== -->
+  <!-- BARRA INFERIOR (CONTROLES LIMPIOS)        -->
+  <!-- ========================================== -->
+  <footer
+    class="sticky bottom-0 z-30 w-full bg-white/95 dark:bg-[#0c1322]/95 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800/80 transition-colors duration-200">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+
+      <!-- Botón Anterior -->
+      <button id="prev-btn" onclick="prevSlide()" type="button" aria-label="Ir al paso anterior"
+        class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-colors disabled:opacity-30 disabled:pointer-events-none">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path>
+        </svg>
+        <span>Anterior</span>
+      </button>
+
+      <!-- Botón Siguiente -->
+      <button id="next-btn" onclick="nextSlide()" type="button" aria-label="Ir al paso siguiente"
+        class="inline-flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-semibold bg-teal-600 hover:bg-teal-500 text-white shadow-sm hover:shadow focus:outline-none focus:ring-2 focus:ring-teal-400 transition-all disabled:opacity-30 disabled:pointer-events-none">
+        <span>Siguiente</span>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path>
+        </svg>
+      </button>
+
+    </div>
+  </footer>
+
+  <!-- ========================================== -->
+  <!-- SCRIPTS DE INTERACCIÓN Y NAVEGACIÓN        -->
+  <!-- ========================================== -->
+  <script>
+    // --- ESTADO DE SLIDES ---
+    const TOTAL_SLIDES = 11;
+    let currentSlide = 0;
+
+    const slides = Array.from({ length: TOTAL_SLIDES }, (_, i) => document.getElementById(`slide-${i}`));
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+
+    function updateView() {
+      // Activar slide visible
+      slides.forEach((slide, idx) => {
+        if (!slide) return;
+        if (idx === currentSlide) {
+          slide.classList.add('active');
+        } else {
+          slide.classList.remove('active');
+        }
+      });
+
+      // Control de botones inferior
+      if (prevBtn) {
+        prevBtn.disabled = currentSlide === 0;
+      }
+      if (nextBtn) {
+        nextBtn.disabled = currentSlide === TOTAL_SLIDES - 1;
+      }
+
+      // Actualizar estado en sidebar desktop
+      document.querySelectorAll('.sidebar-item').forEach(item => {
+        const target = parseInt(item.getAttribute('data-sidebar-target'), 10);
+        const numSpan = item.querySelector('.sidebar-num');
+        if (target === currentSlide) {
+          item.classList.add('bg-teal-50', 'dark:bg-slate-800', 'text-teal-700', 'dark:text-[#2dd4bf]', 'font-semibold');
+          if (numSpan) {
+            numSpan.classList.add('bg-teal-600', 'text-white');
+            numSpan.classList.remove('bg-slate-100', 'dark:bg-slate-800', 'text-slate-700', 'dark:text-slate-300');
+          }
+        } else {
+          item.classList.remove('bg-teal-50', 'dark:bg-slate-800', 'text-teal-700', 'dark:text-[#2dd4bf]', 'font-semibold');
+          if (numSpan) {
+            numSpan.classList.remove('bg-teal-600', 'text-white');
+            numSpan.classList.add('bg-slate-100', 'dark:bg-slate-800', 'text-slate-700', 'dark:text-slate-300');
+          }
+        }
+      });
+
+      // Actualizar hash en URL
+      window.location.hash = `paso-${currentSlide}`;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function goToSlide(idx) {
+      if (idx >= 0 && idx < TOTAL_SLIDES) {
+        currentSlide = idx;
+        updateView();
+        if (document.activeElement && document.activeElement.blur) {
+          document.activeElement.blur();
+        }
+      }
+    }
+
+    function nextSlide() {
+      if (currentSlide < TOTAL_SLIDES - 1) {
+        currentSlide++;
+        updateView();
+      }
+    }
+
+    function prevSlide() {
+      if (currentSlide > 0) {
+        currentSlide--;
+        updateView();
+      }
+    }
+
+    // Atajos de teclado (← y →)
+    document.addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      if (e.key === 'ArrowRight') nextSlide();
+      if (e.key === 'ArrowLeft') prevSlide();
+    });
+
+    // Gestión de Hash inicial
+    window.addEventListener('DOMContentLoaded', () => {
+      const hash = window.location.hash;
+      if (hash && hash.startsWith('#paso-')) {
+        const parsed = parseInt(hash.replace('#paso-', ''), 10);
+        if (!isNaN(parsed) && parsed >= 0 && parsed < TOTAL_SLIDES) {
+          currentSlide = parsed;
+        }
+      }
+      updateView();
+    });
+
+    // --- DRAWER MÓVIL ---
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    const closeDrawerBtn = document.getElementById('close-drawer-btn');
+    const mobileDrawer = document.getElementById('mobile-drawer');
+    const mobileBackdrop = document.getElementById('mobile-backdrop');
+
+    function openMobileMenu() {
+      mobileDrawer?.classList.remove('-translate-x-full');
+      mobileBackdrop?.classList.remove('hidden');
+      setTimeout(() => mobileBackdrop?.classList.remove('opacity-0'), 10);
+    }
+
+    function closeMobileMenu() {
+      mobileDrawer?.classList.add('-translate-x-full');
+      mobileBackdrop?.classList.add('opacity-0');
+      setTimeout(() => mobileBackdrop?.classList.add('hidden'), 300);
+    }
+
+    mobileMenuBtn?.addEventListener('click', openMobileMenu);
+    closeDrawerBtn?.addEventListener('click', closeMobileMenu);
+    mobileBackdrop?.addEventListener('click', closeMobileMenu);
+
+    // --- COPIAR PROMPTS ---
+    document.querySelectorAll('.copy-prompt-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const card = btn.closest('.prompt-card');
+        const rawText = card?.getAttribute('data-raw-prompt') || card?.querySelector('.prompt-content')?.innerText;
+        if (!rawText) return;
+
+        try {
+          await navigator.clipboard.writeText(rawText.trim());
+          const originalHTML = btn.innerHTML;
+          btn.innerHTML = `
+            <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
+            </svg>
+            <span class="text-emerald-300 font-semibold">¡Copiado!</span>
+          `;
+          btn.classList.add('border-emerald-500/80');
+
+          setTimeout(() => {
+            btn.innerHTML = originalHTML;
+            btn.classList.remove('border-emerald-500/80');
+          }, 1800);
+        } catch (err) {
+          console.error('Error al copiar al portapapeles:', err);
+        }
+      });
+    });
+
+    // --- TEMA CLARO/OSCURO ---
+    const themeToggleBtn = document.getElementById('theme-toggle');
+    themeToggleBtn?.addEventListener('click', () => {
+      const isDark = document.documentElement.classList.toggle('dark');
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    });
+  </script>
+</body>
+
+</html>

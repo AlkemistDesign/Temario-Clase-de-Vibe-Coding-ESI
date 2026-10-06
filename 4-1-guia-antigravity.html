@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <title>Google Antigravity para Developers — Apuntes de Vibe Coding</title>
+  <meta name="description"
+    content="Guía práctica para delegar funcionalidades con Google Antigravity sin perder el control de tu código.">
+
+  <!-- Tipografía: Inter y JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+            mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+          },
+          colors: {
+            brand: {
+              teal: {
+                DEFAULT: '#0D9488',
+                hover: '#0F766E',
+                light: '#14B8A6',
+                lightHover: '#2DD4BF',
+              },
+              orange: {
+                DEFAULT: '#C2410C',
+                hover: '#9A3412',
+                light: '#FB923C',
+                lightHover: '#FDBA74',
+              }
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root {
+      color-scheme: light dark;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+
+    /* Estilos del Bloque de Prompt (Tokyo Night) */
+    .prompt-card {
+      background-color: #1a1b26;
+      border: 1px solid rgba(74, 85, 104, 0.4);
+      font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+    }
+
+    .dark .prompt-card {
+      background-color: #13141f;
+      border-color: rgba(51, 65, 85, 0.6);
+    }
+
+    .token-role {
+      color: #2dd4bf;
+      font-weight: 600;
+    }
+
+    .token-param {
+      color: #fb923c;
+      font-weight: 600;
+    }
+
+    .token-tag {
+      color: #38bdf8;
+      font-weight: 500;
+    }
+
+    .token-string {
+      color: #9ece6a;
+    }
+
+    .token-comment {
+      color: #64748b;
+      font-style: italic;
+    }
+
+    .token-keyword {
+      color: #bb9af7;
+      font-weight: 600;
+    }
+  </style>
+
+  <!-- Script previo para evitar parpadeo de tema (FOUC) -->
+  <script>
+    if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  </script>
+</head>
+
+<body
+  class="bg-slate-50 text-slate-900 dark:bg-[#0c1322] dark:text-slate-100 font-sans min-h-screen flex flex-col antialiased transition-colors duration-200">
+
+  <!-- ========================================== -->
+  <!-- BARRA SUPERIOR (TOP BAR)                   -->
+  <!-- ========================================== -->
+  <header
+    class="w-full border-b border-slate-200/60 dark:border-slate-800/60 bg-slate-50/90 dark:bg-[#0c1322]/90 backdrop-blur-md sticky top-0 z-40">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+
+      <div class="flex items-center gap-4">
+        <!-- Regreso a Recursos -->
+        <a href="4-otros-recursos.html"
+          class="flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors group">
+          <svg class="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" fill="none" stroke="currentColor"
+            viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path>
+          </svg>
+          <span>Recursos</span>
+        </a>
+
+        <span class="text-slate-300 dark:text-slate-700">|</span>
+
+        <!-- Logo / Título de sección -->
+        <span class="font-bold text-slate-900 dark:text-white tracking-tight text-base truncate">
+          Tema 4 · <span class="text-orange-600 dark:text-orange-400">Guía Antigravity</span>
+        </span>
+      </div>
+
+      <!-- Selector de Tema Claro/Oscuro -->
+      <button id="theme-toggle" type="button" aria-label="Cambiar tema claro / oscuro"
+        class="w-10 h-10 flex items-center justify-center rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-800/80 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-colors">
+        <svg id="theme-icon-sun" class="w-5 h-5 hidden dark:block text-white" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd"
+            d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"
+            clip-rule="evenodd"></path>
+        </svg>
+        <svg id="theme-icon-moon" class="w-5 h-5 block dark:hidden text-slate-700" fill="currentColor"
+          viewBox="0 0 20 20">
+          <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+        </svg>
+      </button>
+
+    </div>
+  </header>
+
+  <!-- ========================================== -->
+  <!-- CONTENIDO DEL DOCUMENTO                   -->
+  <!-- ========================================== -->
+  <main class="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
+
+    <!-- PORTADA / HERO -->
+    <div class="bg-white dark:bg-[#1a2333]/90 rounded-2xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-4">
+      <div class="flex items-center gap-3">
+        <img src="assets/antigravity.svg" alt="Google Antigravity" class="w-9 h-9 object-contain" />
+        <span class="px-3 py-1 rounded-full text-xs font-mono font-medium bg-orange-100 dark:bg-orange-950/60 text-orange-700 dark:text-orange-300 border border-orange-200/60 dark:border-orange-900/60">
+          Guía Técnica · 4.1
+        </span>
+      </div>
+      
+      <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+        Google Antigravity para Developers
+      </h1>
+      <p class="text-lg sm:text-xl font-medium text-orange-600 dark:text-orange-400">
+        Delega una funcionalidad sin perder el control
+      </p>
+      <p class="text-slate-600 dark:text-slate-300 leading-relaxed text-base">
+        Durante bastante tiempo, programar con IA consistía en abrir un chat, pedir una función, copiarla en tu editor y probar si funcionaba. Con agentes la situación cambia: puedes encargar una tarea, dejar que analice el proyecto, decida archivos, proponga un plan, modifique código y ejecute pruebas. Pero cuanto más trabajo ejecuta un agente, más importante es que tengas claro qué le delegas, dónde debe parar y qué vas a revisar.
+      </p>
+
+      <div class="p-4 rounded-xl bg-orange-50 dark:bg-orange-950/30 border border-orange-200/70 dark:border-orange-900/50 text-sm text-slate-800 dark:text-slate-200 flex items-start gap-3">
+        <span class="text-lg shrink-0">💡</span>
+        <div>
+          <strong class="font-semibold text-orange-900 dark:text-orange-300">La regla de oro:</strong> <span class="italic">El agente ejecuta. Tú sigues dirigiendo.</span> La autonomía del agente tiene sentido cuando no convierte el resultado en una caja negra.
+        </div>
+      </div>
+    </div>
+
+    <!-- PASO 1 -->
+    <section class="bg-white dark:bg-[#1a2333]/90 rounded-2xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-4">
+      <div class="flex items-center gap-3">
+        <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-orange-500/10 text-orange-600 dark:text-orange-400 font-mono font-bold text-sm border border-orange-500/30 shrink-0">1</span>
+        <h2 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+          Antes de delegar, haz que el agente pare y te enseñe el Plan
+        </h2>
+      </div>
+      <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+        Abre en Antigravity IDE un proyecto pequeño que conozcas. Si no entiendes el repositorio, te va a costar mucho saber si el agente lo ha hecho bien.
+      </p>
+      <ul class="space-y-2 text-slate-700 dark:text-slate-300 text-sm list-disc pl-5">
+        <li><strong>Planning Mode:</strong> El agente analiza primero el trabajo y prepara un <em>Implementation Plan</em> antes de empezar a modificar código.</li>
+        <li><strong>Request Review:</strong> Cuando el agente llegue a un punto de control, se detendrá a pedir aprobación en lugar de continuar directamente.</li>
+        <li><strong>Fast Mode:</strong> Úsalo solo para tareas simples y muy localizadas (ej. renombrar una variable). Para funcionalidades completas, mantén el plan.</li>
+      </ul>
+    </section>
+
+    <!-- PASO 2 -->
+    <section class="bg-white dark:bg-[#1a2333]/90 rounded-2xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-4">
+      <div class="flex items-center gap-3">
+        <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-orange-500/10 text-orange-600 dark:text-orange-400 font-mono font-bold text-sm border border-orange-500/30 shrink-0">2</span>
+        <h2 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+          Encárgale una tarea, no le tires una frase
+        </h2>
+      </div>
+      <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+        Si pides simplemente <em>"Añade un buscador a mi aplicación"</em>, dejas en el aire decisiones críticas: ¿sobre qué campo busca?, ¿distingue mayúsculas?, ¿qué pasa si está vacío?, ¿puede instalar librerías?, ¿requiere tests? Encárgale una tarea con 4 piezas estructuradas: <strong>objetivo</strong>, <strong>contexto</strong>, <strong>restricciones</strong> y <strong>criterios de aceptación</strong>.
+      </p>
+
+      <!-- PROMPT DE EJEMPLO -->
+      <div class="prompt-card rounded-xl overflow-hidden shadow-lg">
+        <div class="px-4 py-2.5 bg-slate-900 border-b border-slate-800 flex items-center justify-between text-xs">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-orange-500"></span>
+            <span class="text-slate-400 font-mono">Prompt · Delegación Estructurada en Antigravity</span>
+          </div>
+          <button onclick="copyPrompt('prompt-antigravity-1', this)"
+            class="px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors flex items-center gap-1.5 font-mono text-xs border border-slate-700/60">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+            <span>Copiar Prompt</span>
+          </button>
+        </div>
+        <pre id="prompt-antigravity-1" class="p-4 text-xs sm:text-sm text-slate-200 overflow-x-auto leading-relaxed whitespace-pre-wrap"><span class="token-role">Quiero añadir búsqueda por título a la lista de tareas existente.</span>
+
+<span class="token-param">Antes de modificar código:</span>
+1. Analiza cómo funciona actualmente la lista de tareas y su filtrado.
+2. Identifica los archivos que sería necesario modificar.
+3. Prepara un Implementation Plan.
+4. No implementes ningún cambio hasta que revise el plan.
+
+<span class="token-tag">Restricciones:</span>
+- Mantén el stack y la arquitectura actuales.
+- No añadas dependencias nuevas salvo que sean realmente necesarias y me expliques por qué.
+- No modifiques funcionalidades que no estén relacionadas con esta tarea.
+
+<span class="token-keyword">Consideraré la tarea terminada cuando:</span>
+- La búsqueda se realice por título.
+- Ignore mayúsculas y minúsculas.
+- Elimine espacios al principio y al final de la consulta.
+- Si la consulta está vacía, se muestren todas las tareas.
+- Existan tests para estos comportamientos.</pre>
+      </div>
+    </section>
+
+    <!-- PASO 3 -->
+    <section class="bg-white dark:bg-[#1a2333]/90 rounded-2xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-4">
+      <div class="flex items-center gap-3">
+        <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-orange-500/10 text-orange-600 dark:text-orange-400 font-mono font-bold text-sm border border-orange-500/30 shrink-0">3</span>
+        <h2 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+          Antes de pulsar Proceed, lee lo que piensa hacer
+        </h2>
+      </div>
+      <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+        No pases el Implementation Plan como quien acepta cookies. Audítalo con criterio comprobando estos 5 puntos antes de autorizar la ejecución:
+      </p>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+        <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-[#121927] border border-slate-200/80 dark:border-slate-800/80">
+          <strong class="text-orange-600 dark:text-orange-400 font-mono">1. Comprensión:</strong> ¿Ha entendido el objetivo real de la tarea?
+        </div>
+        <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-[#121927] border border-slate-200/80 dark:border-slate-800/80">
+          <strong class="text-orange-600 dark:text-orange-400 font-mono">2. Scope de archivos:</strong> ¿Va a tocar únicamente los archivos necesarios?
+        </div>
+        <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-[#121927] border border-slate-200/80 dark:border-slate-800/80">
+          <strong class="text-orange-600 dark:text-orange-400 font-mono">3. Arquitectura:</strong> ¿Respeta las convenciones y patrones del proyecto?
+        </div>
+        <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-[#121927] border border-slate-200/80 dark:border-slate-800/80">
+          <strong class="text-orange-600 dark:text-orange-400 font-mono">4. Complejidad:</strong> ¿Intenta meter dependencias o abstracciones innecesarias?
+        </div>
+        <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-[#121927] border border-slate-200/80 dark:border-slate-800/80 sm:col-span-2">
+          <strong class="text-orange-600 dark:text-orange-400 font-mono">5. Verificación:</strong> ¿Cómo piensa comprobar que la implementación funciona?
+        </div>
+      </div>
+
+      <p class="text-xs text-slate-500 dark:text-slate-400 italic">
+        "Un agente rápido ejecutando un mal plan sigue ejecutando un mal plan (y te hace perder el doble de tiempo)."
+      </p>
+    </section>
+
+    <!-- PASO 4 -->
+    <section class="bg-white dark:bg-[#1a2333]/90 rounded-2xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-4">
+      <div class="flex items-center gap-3">
+        <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-orange-500/10 text-orange-600 dark:text-orange-400 font-mono font-bold text-sm border border-orange-500/30 shrink-0">4</span>
+        <h2 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+          Ahora sí: Deja que el agente implemente
+        </h2>
+      </div>
+      <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+        El agente modificará los archivos, utilizará el terminal y ejecutará pruebas. Tú sabes por qué existe cada cambio porque los criterios estaban fijados de antemano.
+      </p>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-mono">
+        <div class="p-4 rounded-xl bg-slate-900 text-slate-300 border border-slate-800">
+          <div class="text-slate-500 pb-2 border-b border-slate-800 mb-2">// Código inicial</div>
+<pre>export function filterTasks(tasks, query) {
+  return tasks.filter(task => 
+    task.title.includes(query)
+  );
+}</pre>
+        </div>
+
+        <div class="p-4 rounded-xl bg-slate-900 text-slate-300 border border-slate-800">
+          <div class="text-teal-400 pb-2 border-b border-slate-800 mb-2">// Resultado según criterios</div>
+<pre>export function filterTasks(tasks, query) {
+  const normalizedQuery = query.trim().toLowerCase();
+  if (!normalizedQuery) {
+    return tasks;
+  }
+  return tasks.filter(task =>
+    task.title.toLowerCase().includes(normalizedQuery)
+  );
+}</pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- PASO 5 -->
+    <section class="bg-white dark:bg-[#1a2333]/90 rounded-2xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-4">
+      <div class="flex items-center gap-3">
+        <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-orange-500/10 text-orange-600 dark:text-orange-400 font-mono font-bold text-sm border border-orange-500/30 shrink-0">5</span>
+        <h2 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+          Review Changes: Revísalo como si fuese un Pull Request
+        </h2>
+      </div>
+      <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+        Abre el panel <strong>Review Changes</strong> para recorrer los diffs. Aplica esta regla: <em>si no aprobarías ese cambio en una revisión hecha por otra persona, tampoco lo apruebes porque lo haya hecho un agente</em>.
+      </p>
+
+      <div class="prompt-card rounded-xl overflow-hidden shadow-lg">
+        <div class="px-4 py-2.5 bg-slate-900 border-b border-slate-800 flex items-center justify-between text-xs">
+          <span class="text-slate-400 font-mono">Prompt · Pedir explicación paso a paso sin tocar código</span>
+          <button onclick="copyPrompt('prompt-antigravity-2', this)"
+            class="px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors flex items-center gap-1.5 font-mono text-xs border border-slate-700/60">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+            <span>Copiar Prompt</span>
+          </button>
+        </div>
+        <pre id="prompt-antigravity-2" class="p-4 text-xs sm:text-sm text-slate-200 overflow-x-auto leading-relaxed whitespace-pre-wrap"><span class="token-role">Explícame este cambio paso a paso sin modificar nada.</span>
+
+<span class="token-param">Quiero entender:</span>
+- ¿Qué problema resuelve cada cambio?
+- ¿Por qué has elegido esta solución?
+- ¿Qué alternativas había?
+- ¿Qué riesgos tiene?
+- ¿Y qué podría romperse?</pre>
+      </div>
+    </section>
+
+    <!-- PASO 6 -->
+    <section class="bg-white dark:bg-[#1a2333]/90 rounded-2xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-4">
+      <div class="flex items-center gap-3">
+        <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-orange-500/10 text-orange-600 dark:text-orange-400 font-mono font-bold text-sm border border-orange-500/30 shrink-0">6</span>
+        <h2 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+          Que los tests estén en verde no cierra la tarea
+        </h2>
+      </div>
+      <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+        Los tests solo comprueban aquello que alguien decidió comprobar. Si te has olvidado de un caso límite (ej. strings con solo espacios, títulos repetidos, regresiones), la suite estará verde y seguirás teniendo un bug.
+      </p>
+
+      <div class="prompt-card rounded-xl overflow-hidden shadow-lg">
+        <div class="px-4 py-2.5 bg-slate-900 border-b border-slate-800 flex items-center justify-between text-xs">
+          <span class="text-slate-400 font-mono">Prompt · Verificación final y casos límite</span>
+          <button onclick="copyPrompt('prompt-antigravity-3', this)"
+            class="px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors flex items-center gap-1.5 font-mono text-xs border border-slate-700/60">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+            <span>Copiar Prompt</span>
+          </button>
+        </div>
+        <pre id="prompt-antigravity-3" class="p-4 text-xs sm:text-sm text-slate-200 overflow-x-auto leading-relaxed whitespace-pre-wrap"><span class="token-role">Antes de cerrar la tarea:</span>
+1. Ejecuta las pruebas relacionadas.
+2. Busca casos límite que no hayamos contemplado.
+3. Comprueba si el cambio puede haber provocado alguna regresión.
+4. Resume cualquier riesgo que siga abierto.
+
+<span class="token-tag">No realices nuevos cambios sin indicármelo primero.</span></pre>
+      </div>
+    </section>
+
+    <!-- PASO 7 -->
+    <section class="bg-white dark:bg-[#1a2333]/90 rounded-2xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-4">
+      <div class="flex items-center gap-3">
+        <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-orange-500/10 text-orange-600 dark:text-orange-400 font-mono font-bold text-sm border border-orange-500/30 shrink-0">7</span>
+        <h2 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+          La última palabra sigue siendo tuya
+        </h2>
+      </div>
+      <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+        El ciclo completo de desarrollo profesional con agentes se resume en 6 fases continuas:
+      </p>
+
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs font-mono">
+        <div class="p-3 rounded-xl bg-orange-50 dark:bg-orange-950/40 border border-orange-200 dark:border-orange-900 text-orange-900 dark:text-orange-200 text-center">
+          <strong>1. Define</strong><br><span class="text-[11px] opacity-80">Objetivos y límites</span>
+        </div>
+        <div class="p-3 rounded-xl bg-orange-50 dark:bg-orange-950/40 border border-orange-200 dark:border-orange-900 text-orange-900 dark:text-orange-200 text-center">
+          <strong>2. Planifica</strong><br><span class="text-[11px] opacity-80">Propuesta del agente</span>
+        </div>
+        <div class="p-3 rounded-xl bg-orange-50 dark:bg-orange-950/40 border border-orange-200 dark:border-orange-900 text-orange-900 dark:text-orange-200 text-center">
+          <strong>3. Revisa</strong><br><span class="text-[11px] opacity-80">Auditar el plan</span>
+        </div>
+        <div class="p-3 rounded-xl bg-orange-50 dark:bg-orange-950/40 border border-orange-200 dark:border-orange-900 text-orange-900 dark:text-orange-200 text-center">
+          <strong>4. Delega</strong><br><span class="text-[11px] opacity-80">Ejecución acordada</span>
+        </div>
+        <div class="p-3 rounded-xl bg-orange-50 dark:bg-orange-950/40 border border-orange-200 dark:border-orange-900 text-orange-900 dark:text-orange-200 text-center">
+          <strong>5. Valida</strong><br><span class="text-[11px] opacity-80">Tests y diffs</span>
+        </div>
+        <div class="p-3 rounded-xl bg-orange-50 dark:bg-orange-950/40 border border-orange-200 dark:border-orange-900 text-orange-900 dark:text-orange-200 text-center">
+          <strong>6. Decide</strong><br><span class="text-[11px] opacity-80">Aprobación final</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- NAVEGACIÓN INFERIOR ENTRE RECURSOS -->
+    <div class="pt-6 border-t border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between gap-4">
+      <a href="4-otros-recursos.html"
+        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-sm font-medium transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+        <span>Volver a Recursos</span>
+      </a>
+
+      <a href="4-2-guia-cursor.html"
+        class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-500 text-white text-sm font-semibold transition-colors shadow-sm">
+        <span>Siguiente: Guía Cursor</span>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
+      </a>
+    </div>
+
+  </main>
+
+  <!-- PIE DE PÁGINA -->
+  <footer class="mt-auto py-8 text-center text-xs text-slate-500 dark:text-slate-500 border-t border-slate-200/60 dark:border-slate-800/60">
+    <div class="max-w-4xl mx-auto px-4">
+      Apuntes de la asignatura Vibe Coding — ESI Valladolid
+    </div>
+  </footer>
+
+  <!-- SCRIPT DE COPIADO Y TEMA -->
+  <script>
+    function copyPrompt(id, btn) {
+      const text = document.getElementById(id).innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = `<svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg><span class="text-emerald-400">¡Copiado!</span>`;
+        btn.classList.add('bg-emerald-950/60', 'border-emerald-800/80');
+        setTimeout(() => {
+          btn.innerHTML = originalHtml;
+          btn.classList.remove('bg-emerald-950/60', 'border-emerald-800/80');
+        }, 1800);
+      });
+    }
+
+    const themeToggleBtn = document.getElementById('theme-toggle');
+    themeToggleBtn.addEventListener('click', () => {
+      if (document.documentElement.classList.contains('dark')) {
+        document.documentElement.classList.remove('dark');
+        localStorage.setItem('theme', 'light');
+      } else {
+        document.documentElement.classList.add('dark');
+        localStorage.setItem('theme', 'dark');
+      }
+    });
+  </script>
+
+</body>
+</html>

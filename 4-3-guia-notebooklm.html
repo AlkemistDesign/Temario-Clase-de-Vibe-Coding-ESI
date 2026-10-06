@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <title>Guía de NotebookLM para Developers — Apuntes de Vibe Coding</title>
+  <meta name="description"
+    content="Guía práctica para preparar el contexto y auditar fuentes antes de programar con IA usando NotebookLM.">
+
+  <!-- Tipografía: Inter y JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+            mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+          },
+          colors: {
+            brand: {
+              teal: {
+                DEFAULT: '#0D9488',
+                hover: '#0F766E',
+                light: '#14B8A6',
+                lightHover: '#2DD4BF',
+              },
+              orange: {
+                DEFAULT: '#C2410C',
+                hover: '#9A3412',
+                light: '#FB923C',
+                lightHover: '#FDBA74',
+              }
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root {
+      color-scheme: light dark;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+
+    /* Estilos del Bloque de Prompt (Tokyo Night) */
+    .prompt-card {
+      background-color: #1a1b26;
+      border: 1px solid rgba(74, 85, 104, 0.4);
+      font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+    }
+
+    .dark .prompt-card {
+      background-color: #13141f;
+      border-color: rgba(51, 65, 85, 0.6);
+    }
+
+    .token-role {
+      color: #2dd4bf;
+      font-weight: 600;
+    }
+
+    .token-param {
+      color: #fb923c;
+      font-weight: 600;
+    }
+
+    .token-tag {
+      color: #38bdf8;
+      font-weight: 500;
+    }
+
+    .token-string {
+      color: #9ece6a;
+    }
+
+    .token-comment {
+      color: #64748b;
+      font-style: italic;
+    }
+
+    .token-keyword {
+      color: #bb9af7;
+      font-weight: 600;
+    }
+  </style>
+
+  <!-- Script previo para evitar parpadeo de tema (FOUC) -->
+  <script>
+    if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  </script>
+</head>
+
+<body
+  class="bg-slate-50 text-slate-900 dark:bg-[#0c1322] dark:text-slate-100 font-sans min-h-screen flex flex-col antialiased transition-colors duration-200">
+
+  <!-- ========================================== -->
+  <!-- BARRA SUPERIOR (TOP BAR)                   -->
+  <!-- ========================================== -->
+  <header
+    class="w-full border-b border-slate-200/60 dark:border-slate-800/60 bg-slate-50/90 dark:bg-[#0c1322]/90 backdrop-blur-md sticky top-0 z-40">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+
+      <div class="flex items-center gap-4">
+        <!-- Regreso a Recursos -->
+        <a href="4-otros-recursos.html"
+          class="flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors group">
+          <svg class="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" fill="none" stroke="currentColor"
+            viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path>
+          </svg>
+          <span>Recursos</span>
+        </a>
+
+        <span class="text-slate-300 dark:text-slate-700">|</span>
+
+        <!-- Logo / Título de sección -->
+        <span class="font-bold text-slate-900 dark:text-white tracking-tight text-base truncate">
+          Tema 4 · <span class="text-orange-600 dark:text-orange-400">Guía NotebookLM</span>
+        </span>
+      </div>
+
+      <!-- Selector de Tema Claro/Oscuro -->
+      <button id="theme-toggle" type="button" aria-label="Cambiar tema claro / oscuro"
+        class="w-10 h-10 flex items-center justify-center rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-800/80 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-colors">
+        <svg id="theme-icon-sun" class="w-5 h-5 hidden dark:block text-white" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd"
+            d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"
+            clip-rule="evenodd"></path>
+        </svg>
+        <svg id="theme-icon-moon" class="w-5 h-5 block dark:hidden text-slate-700" fill="currentColor"
+          viewBox="0 0 20 20">
+          <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+        </svg>
+      </button>
+
+    </div>
+  </header>
+
+  <!-- ========================================== -->
+  <!-- CONTENIDO DEL DOCUMENTO                   -->
+  <!-- ========================================== -->
+  <main class="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
+
+    <!-- PORTADA / HERO -->
+    <div class="bg-white dark:bg-[#1a2333]/90 rounded-2xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-4">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-orange-500/10 text-orange-600 dark:text-orange-400 flex items-center justify-center font-bold font-mono text-sm border border-orange-500/30">
+          NLM
+        </div>
+        <span class="px-3 py-1 rounded-full text-xs font-mono font-medium bg-orange-100 dark:bg-orange-950/60 text-orange-700 dark:text-orange-300 border border-orange-200/60 dark:border-orange-900/60">
+          Guía Técnica · 4.3
+        </span>
+      </div>
+      
+      <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+        Guía de NotebookLM para Developers
+      </h1>
+      <p class="text-lg sm:text-xl font-medium text-orange-600 dark:text-orange-400">
+        Prepara el contexto antes de programar con IA
+      </p>
+      <p class="text-slate-600 dark:text-slate-300 leading-relaxed text-base">
+        Generar código antes de entender qué quieres construir es la receta más rápida para crear deuda técnica. Si pides a un agente <em>"Implementa recuperación de contraseña"</em>, quedan docenas de decisiones en el aire (caducidad del token, invalidación de sesiones, seguridad, emails). NotebookLM se coloca <strong>un paso antes</strong>: para reunir especificaciones, entender qué sabes, detectar vacíos y llegar a tu agente con instrucciones precisas.
+      </p>
+
+      <div class="p-4 rounded-xl bg-orange-50 dark:bg-orange-950/30 border border-orange-200/70 dark:border-orange-900/50 text-sm text-slate-800 dark:text-slate-200 flex items-start gap-3">
+        <span class="text-lg shrink-0">💡</span>
+        <div>
+          <strong class="font-semibold text-orange-900 dark:text-orange-300">El flujo fundamental:</strong> No uses NotebookLM para escribir código, sino para construir la ficha de contexto. <span class="italic">1. Pregunta → 2. Localiza → 3. Comprueba → 4. Decide.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PASO 1 -->
+    <section class="bg-white dark:bg-[#1a2333]/90 rounded-2xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-4">
+      <div class="flex items-center gap-3">
+        <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-orange-500/10 text-orange-600 dark:text-orange-400 font-mono font-bold text-sm border border-orange-500/30 shrink-0">1</span>
+        <h2 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+          Crea un Notebook para el problema concreto
+        </h2>
+      </div>
+      <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+        No crees un cuaderno general llamado <em>"Proyecto"</em> o <em>"Programación"</em>. Céntralo en una funcionalidad específica, como por ejemplo: <code class="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-orange-600 dark:text-orange-400 font-mono text-xs">"Proyecto — Recuperación de contraseña"</code>. Un espacio acotado evita el ruido contextual.
+      </p>
+    </section>
+
+    <!-- PASO 2 -->
+    <section class="bg-white dark:bg-[#1a2333]/90 rounded-2xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-4">
+      <div class="flex items-center gap-3">
+        <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-orange-500/10 text-orange-600 dark:text-orange-400 font-mono font-bold text-sm border border-orange-500/30 shrink-0">2</span>
+        <h2 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+          No metas más contexto: mete MEJOR contexto
+        </h2>
+      </div>
+      <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+        No subas 30 archivos por si acaso. Selecciona fuentes con un propósito definido:
+      </p>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+        <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-[#121927] border border-slate-200/80 dark:border-slate-800/80">
+          <strong class="text-orange-600 dark:text-orange-400 font-mono">1. Especificación:</strong> Requisitos y comportamiento esperado.
+        </div>
+        <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-[#121927] border border-slate-200/80 dark:border-slate-800/80">
+          <strong class="text-orange-600 dark:text-orange-400 font-mono">2. README / Stack:</strong> Configuración y tecnologías vigentes.
+        </div>
+        <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-[#121927] border border-slate-200/80 dark:border-slate-800/80">
+          <strong class="text-orange-600 dark:text-orange-400 font-mono">3. Arquitectura:</strong> Patrones, convenciones y módulos afectados.
+        </div>
+        <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-[#121927] border border-slate-200/80 dark:border-slate-800/80">
+          <strong class="text-orange-600 dark:text-orange-400 font-mono">4. Docs Oficiales:</strong> Proveedor de autenticación / emails.
+        </div>
+        <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-[#121927] border border-slate-200/80 dark:border-slate-800/80 sm:col-span-2">
+          <strong class="text-orange-600 dark:text-orange-400 font-mono">5. Seguridad:</strong> Políticas de tokens, expiración y sesiones.
+        </div>
+      </div>
+    </section>
+
+    <!-- PASO 3: LAS 5 PREGUNTAS -->
+    <section class="bg-white dark:bg-[#1a2333]/90 rounded-2xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-6">
+      <div class="flex items-center gap-3">
+        <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-orange-500/10 text-orange-600 dark:text-orange-400 font-mono font-bold text-sm border border-orange-500/30 shrink-0">3</span>
+        <h2 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+          Las 5 Preguntas Clave antes de programar
+        </h2>
+      </div>
+
+      <div class="space-y-4">
+        <!-- P1 -->
+        <div class="p-4 rounded-xl bg-slate-50 dark:bg-[#121927] border border-slate-200/80 dark:border-slate-800/80 space-y-2">
+          <span class="text-xs font-mono font-bold text-orange-600 dark:text-orange-400">Pregunta 1 · Objetivo Exacto</span>
+          <h3 class="font-bold text-slate-900 dark:text-white text-base">¿Qué tenemos que construir exactamente?</h3>
+          <p class="text-xs font-mono text-slate-700 dark:text-slate-300 bg-white dark:bg-[#1a2333] p-3 rounded-lg border border-slate-200/80 dark:border-slate-800/80">
+            "Basándote únicamente en las fuentes de este Notebook, explícame qué comportamiento debe tener esta funcionalidad para considerarse terminada. Indica qué fuente respalda cada requisito importante."
+          </p>
+        </div>
+
+        <!-- P2 -->
+        <div class="p-4 rounded-xl bg-slate-50 dark:bg-[#121927] border border-slate-200/80 dark:border-slate-800/80 space-y-2">
+          <span class="text-xs font-mono font-bold text-orange-600 dark:text-orange-400">Pregunta 2 · Restricciones</span>
+          <h3 class="font-bold text-slate-900 dark:text-white text-base">¿Qué restricciones debes respetar?</h3>
+          <p class="text-xs font-mono text-slate-700 dark:text-slate-300 bg-white dark:bg-[#1a2333] p-3 rounded-lg border border-slate-200/80 dark:border-slate-800/80">
+            "Identifica las restricciones técnicas, de arquitectura, seguridad, compatibilidad o negocio que podrían condicionar la implementación de esta funcionalidad. Indica de qué fuente sale cada una."
+          </p>
+        </div>
+
+        <!-- P3 -->
+        <div class="p-4 rounded-xl bg-slate-50 dark:bg-[#121927] border border-slate-200/80 dark:border-slate-800/80 space-y-2">
+          <span class="text-xs font-mono font-bold text-orange-600 dark:text-orange-400">Pregunta 3 · Ubicación en el sistema</span>
+          <h3 class="font-bold text-slate-900 dark:text-white text-base">¿Dónde encaja dentro del proyecto?</h3>
+          <p class="text-xs font-mono text-slate-700 dark:text-slate-300 bg-white dark:bg-[#1a2333] p-3 rounded-lg border border-slate-200/80 dark:border-slate-800/80">
+            "Según la arquitectura y la documentación disponibles, ¿qué componentes del sistema podrían verse afectados por esta funcionalidad? Señala también qué decisiones técnicas existentes deberíamos respetar."
+          </p>
+        </div>
+
+        <!-- P4 -->
+        <div class="p-4 rounded-xl bg-slate-50 dark:bg-[#121927] border border-slate-200/80 dark:border-slate-800/80 space-y-2">
+          <span class="text-xs font-mono font-bold text-orange-600 dark:text-orange-400">Pregunta 4 · Detección de vacíos y contradicciones</span>
+          <h3 class="font-bold text-slate-900 dark:text-white text-base">¿Qué te falta por saber? (Punto crítico)</h3>
+          <p class="text-xs font-mono text-slate-700 dark:text-slate-300 bg-white dark:bg-[#1a2333] p-3 rounded-lg border border-slate-200/80 dark:border-slate-800/80">
+            "Busca información que todavía no esté definida: ambigüedades, contradicciones entre fuentes o decisiones que deberíamos aclarar antes de comenzar a implementar. No inventes una respuesta cuando las fuentes no permitan resolverla."
+          </p>
+        </div>
+
+        <!-- P5 -->
+        <div class="p-4 rounded-xl bg-slate-50 dark:bg-[#121927] border border-slate-200/80 dark:border-slate-800/80 space-y-2">
+          <span class="text-xs font-mono font-bold text-orange-600 dark:text-orange-400">Pregunta 5 · Criterios de aceptación</span>
+          <h3 class="font-bold text-slate-900 dark:text-white text-base">¿Cómo sabes que está terminado?</h3>
+          <p class="text-xs font-mono text-slate-700 dark:text-slate-300 bg-white dark:bg-[#1a2333] p-3 rounded-lg border border-slate-200/80 dark:border-slate-800/80">
+            "Extrae de las fuentes los criterios de aceptación, comportamientos esperados y casos límite que deberíamos comprobar antes de considerar terminada la funcionalidad."
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- PASO 4 & 5: FICHA DE CONTEXTO -->
+    <section class="bg-white dark:bg-[#1a2333]/90 rounded-2xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-4">
+      <div class="flex items-center gap-3">
+        <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-orange-500/10 text-orange-600 dark:text-orange-400 font-mono font-bold text-sm border border-orange-500/30 shrink-0">4</span>
+        <h2 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+          Genera la Ficha de Contexto para tu Agente
+        </h2>
+      </div>
+      <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+        Una vez auditadas las respuestas y las citas en las fuentes originales, lanza este prompt final en NotebookLM para empaquetar el contexto que le entregarás a tu agente de desarrollo (Antigravity, Cursor, etc.):
+      </p>
+
+      <div class="prompt-card rounded-xl overflow-hidden shadow-lg">
+        <div class="px-4 py-2.5 bg-slate-900 border-b border-slate-800 flex items-center justify-between text-xs">
+          <span class="text-slate-400 font-mono">Prompt · Generación de Ficha de Contexto Estructurada</span>
+          <button onclick="copyPrompt('prompt-notebooklm-final', this)"
+            class="px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors flex items-center gap-1.5 font-mono text-xs border border-slate-700/60">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+            <span>Copiar Prompt</span>
+          </button>
+        </div>
+        <pre id="prompt-notebooklm-final" class="p-4 text-xs sm:text-sm text-slate-200 overflow-x-auto leading-relaxed whitespace-pre-wrap"><span class="token-role">Basándote únicamente en las fuentes que hemos revisado, prepara una ficha de contexto para implementar esta funcionalidad con un agente de desarrollo.</span>
+
+<span class="token-param">Incluye:</span>
+- Objetivo de la funcionalidad
+- Comportamiento esperado
+- Componentes del proyecto que podrían verse afectados
+- Restricciones técnicas y de arquitectura
+- Decisiones existentes que debemos respetar
+- Requisitos de seguridad, si existen
+- Casos límite
+- Criterios de aceptación
+- Cuestiones que todavía no estén resueltas
+
+<span class="token-keyword">No escribas código. No inventes información que no aparezca en las fuentes y señala cualquier punto que necesitemos aclarar antes de desarrollar.</span></pre>
+      </div>
+    </section>
+
+    <!-- NAVEGACIÓN INFERIOR ENTRE RECURSOS -->
+    <div class="pt-6 border-t border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between gap-4">
+      <a href="4-2-guia-cursor.html"
+        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-sm font-medium transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+        <span>Anterior: Guía Cursor</span>
+      </a>
+
+      <a href="4-4-prompt-chatgpt.html"
+        class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-500 text-white text-sm font-semibold transition-colors shadow-sm">
+        <span>Siguiente: Prompts ChatGPT</span>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+      </a>
+    </div>
+
+  </main>
+
+  <!-- PIE DE PÁGINA -->
+  <footer class="mt-auto py-8 text-center text-xs text-slate-500 dark:text-slate-500 border-t border-slate-200/60 dark:border-slate-800/60">
+    <div class="max-w-4xl mx-auto px-4">
+      Apuntes de la asignatura Vibe Coding — ESI Valladolid
+    </div>
+  </footer>
+
+  <!-- SCRIPT DE COPIADO Y TEMA -->
+  <script>
+    function copyPrompt(id, btn) {
+      const text = document.getElementById(id).innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = `<svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg><span class="text-emerald-400">¡Copiado!</span>`;
+        btn.classList.add('bg-emerald-950/60', 'border-emerald-800/80');
+        setTimeout(() => {
+          btn.innerHTML = originalHtml;
+          btn.classList.remove('bg-emerald-950/60', 'border-emerald-800/80');
+        }, 1800);
+      });
+    }
+
+    const themeToggleBtn = document.getElementById('theme-toggle');
+    themeToggleBtn.addEventListener('click', () => {
+      if (document.documentElement.classList.contains('dark')) {
+        document.documentElement.classList.remove('dark');
+        localStorage.setItem('theme', 'light');
+      } else {
+        document.documentElement.classList.add('dark');
+        localStorage.setItem('theme', 'dark');
+      }
+    });
+  </script>
+
+</body>
+</html>
