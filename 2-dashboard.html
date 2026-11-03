@@ -1,0 +1,1990 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <title>Tarea 2 - Dashboard — Apuntes de Vibe Coding</title>
+  <meta name="description"
+    content="Context Engineering, AGENTS.md, MEMORY.md, Modo Plan, Custom Commands, Agent Skills y MCP.">
+
+  <!-- Fuentes: Inter y JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+            mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+          },
+          colors: {
+            brand: {
+              teal: {
+                DEFAULT: '#0D9488',
+                hover: '#0F766E',
+                light: '#14B8A6',
+                lightHover: '#2DD4BF',
+              },
+              orange: {
+                DEFAULT: '#C2410C',
+                hover: '#9A3412',
+                light: '#FB923C',
+                lightHover: '#FDBA74',
+              }
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root {
+      color-scheme: light dark;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+
+    /* Mini-rail lateral en escritorio */
+    .mini-rail-text {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease-in-out;
+      white-space: nowrap;
+    }
+
+    #desktop-sidebar:hover .mini-rail-text {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* Estilos del Bloque de Prompt (Tokyo Night) */
+    .prompt-card {
+      background-color: #1a1b26;
+      border: 1px solid rgba(74, 85, 104, 0.4);
+      font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+    }
+
+    .dark .prompt-card {
+      background-color: #13141f;
+      border-color: rgba(51, 65, 85, 0.6);
+    }
+
+    /* Resaltado de sintaxis */
+    .token-role {
+      color: #2dd4bf;
+      font-weight: 600;
+    }
+
+    .token-param {
+      color: #fb923c;
+      font-weight: 600;
+    }
+
+    .token-tag {
+      color: #38bdf8;
+      font-weight: 500;
+    }
+
+    .token-string {
+      color: #9ece6a;
+    }
+
+    .token-str {
+      color: #9ece6a;
+    }
+
+    .token-comment {
+      color: #64748b;
+      font-style: italic;
+    }
+
+    .token-keyword {
+      color: #bb9af7;
+      font-weight: 600;
+    }
+
+    .token-key {
+      color: #7aa2f7;
+    }
+
+    /* Animación de entrada de vista */
+    .slide-view {
+      display: none;
+      animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .slide-view.active {
+      display: block;
+    }
+
+    .slide-view.active.flex-slide {
+      display: flex;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(4px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+
+  <!-- Script preventivo FOUC -->
+  <script>
+    if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  </script>
+</head>
+
+<body
+  class="bg-slate-50 text-slate-900 dark:bg-[#0c1322] dark:text-slate-100 font-sans min-h-screen flex flex-col antialiased transition-colors duration-200">
+
+  <!-- ========================================== -->
+  <!-- BARRA SUPERIOR (TOP BAR)                   -->
+  <!-- ========================================== -->
+  <header
+    class="sticky top-0 z-40 w-full bg-white/90 dark:bg-[#0c1322]/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 transition-colors duration-200">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+
+      <!-- Izquierda: Botón Menú Móvil + Volver a Índice + Título -->
+      <div class="flex items-center gap-3">
+        <button id="mobile-menu-btn" type="button" aria-label="Abrir menú de apartados"
+          class="md:hidden flex items-center justify-center w-10 h-10 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/80 focus:outline-none focus:ring-2 focus:ring-teal-500">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+          </svg>
+        </button>
+
+        <a href="index.html"
+          class="flex items-center gap-2 px-3 py-1.5 rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors text-sm font-medium">
+          <svg class="w-4 h-4 text-teal-600 dark:text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18">
+            </path>
+          </svg>
+          <span class="font-semibold text-slate-900 dark:text-white">Índice</span>
+        </a>
+
+        <div class="h-4 w-px bg-slate-200 dark:bg-slate-800 hidden sm:block"></div>
+
+        <span class="font-bold text-slate-900 dark:text-white text-base hidden sm:inline">Tarea 2 - Dashboard</span>
+      </div>
+
+      <!-- Selector de Tema Claro/Oscuro -->
+      <button id="theme-toggle" type="button" aria-label="Cambiar tema claro / oscuro"
+        class="w-10 h-10 flex items-center justify-center rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-800/80 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-colors">
+        <svg id="theme-icon-sun" class="w-5 h-5 hidden dark:block text-white" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd"
+            d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"
+            clip-rule="evenodd"></path>
+        </svg>
+        <svg id="theme-icon-moon" class="w-5 h-5 block dark:hidden text-slate-700" fill="currentColor"
+          viewBox="0 0 20 20">
+          <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+        </svg>
+      </button>
+
+    </div>
+  </header>
+
+  <!-- ========================================== -->
+  <!-- BARRA LATERAL DESKTOP (MINI-RAIL)          -->
+  <!-- ========================================== -->
+  <aside id="desktop-sidebar" aria-label="Navegación de apartados"
+    class="hidden md:flex flex-col fixed top-16 left-0 h-[calc(100vh-4rem)] w-16 hover:w-64 bg-white/95 dark:bg-[#0f172a]/95 backdrop-blur-md border-r border-slate-200/80 dark:border-slate-800/80 z-30 transition-all duration-300 ease-in-out shadow-sm hover:shadow-2xl overflow-x-hidden overflow-y-auto group">
+
+    <div class="px-4 py-4 border-b border-slate-100 dark:border-slate-800">
+      <h2 class="mini-rail-text text-base font-bold text-slate-900 dark:text-white tracking-tight">
+        Tarea 2 - Dashboard
+      </h2>
+    </div>
+
+    <nav class="flex-1 py-3 space-y-1 px-2 text-xs">
+      <!-- Encabezado 2.1 -->
+      <div class="px-2 pt-1 pb-1">
+        <span
+          class="mini-rail-text text-[10px] font-bold uppercase tracking-wider text-teal-600 dark:text-teal-400">2.1.
+          Crear AGENTS.md, DESIGN.md y MEMORY.md</span>
+      </div>
+
+      <!-- 0: Context Engineering -->
+      <button onclick="goToSlide(0)" data-sidebar-target="0"
+        class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left transition-colors">
+        <span
+          class="flex-shrink-0 w-6 h-6 flex items-center justify-center font-mono font-semibold text-xs rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 sidebar-num">1</span>
+        <span class="mini-rail-text truncate font-medium">Context Engineering</span>
+      </button>
+
+      <!-- 1: AGENTS.md -->
+      <button onclick="goToSlide(1)" data-sidebar-target="1"
+        class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left transition-colors">
+        <span
+          class="flex-shrink-0 w-6 h-6 flex items-center justify-center font-mono font-semibold text-xs rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 sidebar-num">2</span>
+        <span class="mini-rail-text truncate font-medium">AGENTS.md</span>
+      </button>
+
+      <!-- 2: MEMORY.md -->
+      <button onclick="goToSlide(2)" data-sidebar-target="2"
+        class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left transition-colors">
+        <span
+          class="flex-shrink-0 w-6 h-6 flex items-center justify-center font-mono font-semibold text-xs rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 sidebar-num">3</span>
+        <span class="mini-rail-text truncate font-medium">MEMORY.md</span>
+      </button>
+
+      <!-- 3: DESIGN.md -->
+      <button onclick="goToSlide(3)" data-sidebar-target="3"
+        class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left transition-colors">
+        <span
+          class="flex-shrink-0 w-6 h-6 flex items-center justify-center font-mono font-semibold text-xs rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 sidebar-num">4</span>
+        <span class="mini-rail-text truncate font-medium">DESIGN.md</span>
+      </button>
+
+      <!-- 4: Modo Plan -->
+      <button onclick="goToSlide(4)" data-sidebar-target="4"
+        class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left transition-colors">
+        <span
+          class="flex-shrink-0 w-6 h-6 flex items-center justify-center font-mono font-semibold text-xs rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 sidebar-num">5</span>
+        <span class="mini-rail-text truncate font-medium">Modo Plan</span>
+      </button>
+
+      <div class="my-2 border-t border-slate-100 dark:border-slate-800"></div>
+
+      <!-- Encabezado 2.2 -->
+      <div class="px-2 pt-1 pb-1">
+        <span
+          class="mini-rail-text text-[10px] font-bold uppercase tracking-wider text-teal-600 dark:text-teal-400">2.2.
+          Workflows y skills</span>
+      </div>
+
+      <!-- 5: Diferencia entre Workflow y Skill -->
+      <button onclick="goToSlide(5)" data-sidebar-target="5"
+        class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left transition-colors">
+        <span
+          class="flex-shrink-0 w-6 h-6 flex items-center justify-center font-mono font-semibold text-xs rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 sidebar-num">6</span>
+        <span class="mini-rail-text truncate font-medium">Diferencia Workflow y Skill</span>
+      </button>
+
+      <!-- 6: Comandos personalizados -->
+      <button onclick="goToSlide(6)" data-sidebar-target="6"
+        class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left transition-colors">
+        <span
+          class="flex-shrink-0 w-6 h-6 flex items-center justify-center font-mono font-semibold text-xs rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 sidebar-num">7</span>
+        <span class="mini-rail-text truncate font-medium">Comandos personalizados</span>
+      </button>
+
+      <!-- 7: Agent Skills -->
+      <button onclick="goToSlide(7)" data-sidebar-target="7"
+        class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left transition-colors">
+        <span
+          class="flex-shrink-0 w-6 h-6 flex items-center justify-center font-mono font-semibold text-xs rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 sidebar-num">8</span>
+        <span class="mini-rail-text truncate font-medium">Agent Skills</span>
+      </button>
+
+      <!-- 8: Skills de terceros -->
+      <button onclick="goToSlide(8)" data-sidebar-target="8"
+        class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left transition-colors">
+        <span
+          class="flex-shrink-0 w-6 h-6 flex items-center justify-center font-mono font-semibold text-xs rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 sidebar-num">9</span>
+        <span class="mini-rail-text truncate font-medium">Skills de terceros</span>
+      </button>
+
+      <div class="my-2 border-t border-slate-100 dark:border-slate-800"></div>
+
+      <!-- Encabezado 2.3 -->
+      <div class="px-2 pt-1 pb-1">
+        <span
+          class="mini-rail-text text-[10px] font-bold uppercase tracking-wider text-teal-600 dark:text-teal-400">2.3.
+          MCPs (Model Context Protocols)</span>
+      </div>
+
+      <!-- 9: MCP Protocol -->
+      <button onclick="goToSlide(9)" data-sidebar-target="9"
+        class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left transition-colors">
+        <span
+          class="flex-shrink-0 w-6 h-6 flex items-center justify-center font-mono font-semibold text-xs rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 sidebar-num">10</span>
+        <span class="mini-rail-text truncate font-medium">Model Context Protocol</span>
+      </button>
+
+      <!-- 10: Testing Chrome DevTools -->
+      <button onclick="goToSlide(10)" data-sidebar-target="10"
+        class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left transition-colors">
+        <span
+          class="flex-shrink-0 w-6 h-6 flex items-center justify-center font-mono font-semibold text-xs rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 sidebar-num">11</span>
+        <span class="mini-rail-text truncate font-medium">Testing con Chrome DevTools</span>
+      </button>
+
+      <div class="my-2 border-t border-slate-100 dark:border-slate-800"></div>
+
+      <!-- 11: Resumen del tema -->
+      <button onclick="goToSlide(11)" data-sidebar-target="11"
+        class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left transition-colors text-slate-400 dark:text-slate-500">
+        <span
+          class="flex-shrink-0 w-6 h-6 flex items-center justify-center font-mono font-semibold text-xs rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 sidebar-num">✓</span>
+        <span class="mini-rail-text truncate font-medium">Resumen del tema</span>
+      </button>
+    </nav>
+  </aside>
+
+  <!-- ========================================== -->
+  <!-- BARRA LATERAL MÓVIL (DRAWER)               -->
+  <!-- ========================================== -->
+  <div id="mobile-backdrop"
+    class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden transition-opacity opacity-0"></div>
+
+  <aside id="mobile-drawer"
+    class="fixed top-0 left-0 bottom-0 w-72 max-w-[80vw] bg-white dark:bg-[#0f172a] z-50 transform -translate-x-full transition-transform duration-300 ease-in-out shadow-2xl flex flex-col">
+    <div class="h-16 px-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+      <h2 class="font-bold text-slate-900 dark:text-white text-lg">Tarea 2 - Dashboard</h2>
+      <button id="close-drawer-btn"
+        class="w-10 h-10 flex items-center justify-center rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 focus:outline-none">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+
+    <nav class="flex-1 py-4 px-3 space-y-1 overflow-y-auto text-sm">
+      <div class="px-3 pt-1 pb-1">
+        <span class="text-[11px] font-bold uppercase tracking-wider text-teal-600 dark:text-teal-400">2.1. Crear AGENTS.md, DESIGN.md y MEMORY.md</span>
+      </div>
+      <button onclick="goToSlide(0); closeMobileMenu();"
+        class="mobile-drawer-btn w-full text-left px-4 py-2 rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">
+        Context Engineering
+      </button>
+      <button onclick="goToSlide(1); closeMobileMenu();"
+        class="mobile-drawer-btn w-full text-left px-4 py-2 rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">
+        AGENTS.md
+      </button>
+      <button onclick="goToSlide(2); closeMobileMenu();"
+        class="mobile-drawer-btn w-full text-left px-4 py-2 rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">
+        MEMORY.md
+      </button>
+      <button onclick="goToSlide(3); closeMobileMenu();"
+        class="mobile-drawer-btn w-full text-left px-4 py-2 rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">
+        DESIGN.md
+      </button>
+      <button onclick="goToSlide(4); closeMobileMenu();"
+        class="mobile-drawer-btn w-full text-left px-4 py-2 rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">
+        Modo Plan
+      </button>
+
+      <div class="my-2 border-t border-slate-200 dark:border-slate-800"></div>
+
+      <div class="px-3 pt-1 pb-1">
+        <span class="text-[11px] font-bold uppercase tracking-wider text-teal-600 dark:text-teal-400">2.2. Workflows y skills</span>
+      </div>
+      <button onclick="goToSlide(5); closeMobileMenu();"
+        class="mobile-drawer-btn w-full text-left px-4 py-2 rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">
+        Diferencia Workflow y Skill
+      </button>
+      <button onclick="goToSlide(6); closeMobileMenu();"
+        class="mobile-drawer-btn w-full text-left px-4 py-2 rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">
+        Comandos personalizados
+      </button>
+      <button onclick="goToSlide(7); closeMobileMenu();"
+        class="mobile-drawer-btn w-full text-left px-4 py-2 rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">
+        Agent Skills
+      </button>
+      <button onclick="goToSlide(8); closeMobileMenu();"
+        class="mobile-drawer-btn w-full text-left px-4 py-2 rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">
+        Skills de terceros
+      </button>
+
+      <div class="my-2 border-t border-slate-200 dark:border-slate-800"></div>
+
+      <div class="px-3 pt-1 pb-1">
+        <span class="text-[11px] font-bold uppercase tracking-wider text-teal-600 dark:text-teal-400">2.3. MCPs (Model Context Protocols)</span>
+      </div>
+      <button onclick="goToSlide(9); closeMobileMenu();"
+        class="mobile-drawer-btn w-full text-left px-4 py-2 rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">
+        Model Context Protocol
+      </button>
+      <button onclick="goToSlide(10); closeMobileMenu();"
+        class="mobile-drawer-btn w-full text-left px-4 py-2 rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">
+        Testing con Chrome DevTools
+      </button>
+
+      <div class="my-2 border-t border-slate-200 dark:border-slate-800"></div>
+
+      <button onclick="goToSlide(11); closeMobileMenu();"
+        class="mobile-drawer-btn w-full text-left px-4 py-2 rounded-xl text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800">
+        Resumen del tema
+      </button>
+    </nav>
+  </aside>
+
+  <!-- ========================================== -->
+  <!-- CONTENIDO PRINCIPAL (MAX-W-6XL)            -->
+  <!-- ========================================== -->
+  <main class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 md:pl-24 transition-all">
+
+    <!-- ================= SLIDE 0: CONTEXT ENGINEERING ================= -->
+    <div id="slide-0" class="slide-view active space-y-6">
+      <div class="pb-4 border-b border-slate-200 dark:border-slate-800">
+        <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+          Context Engineering
+        </h1>
+      </div>
+
+      <div class="space-y-3 text-sm sm:text-base text-slate-700 dark:text-slate-300 leading-relaxed">
+        <p>
+          En esta tarea vamos a hacer una web tipo dashboard para el estudio. Puedes (y debes) personalizarla todo lo
+          que
+          quieras, añadir funcionalidades, colores, y dejarla a tu gusto. Yo voy a proporcionarte unos prompts básicos
+          con
+          los que experimentar.
+        </p>
+        <p>
+          Lo interesante frente a la tarea anterior es que vamos a utilizar ingeniería de contexto para refinar lo
+          máximo
+          posible el uso de los LLMs
+        </p>
+      </div>
+
+      <!-- Banner Central -->
+      <div
+        class="bg-gradient-to-r from-teal-500/10 via-teal-500/5 to-transparent border-l-4 border-teal-600 dark:border-teal-400 p-4 sm:p-5 rounded-r-2xl">
+        <p class="text-sm sm:text-base text-slate-800 dark:text-slate-200 leading-relaxed">
+          <strong>La ingeniería de contexto</strong> consiste en <span
+            class="text-teal-700 dark:text-[#2dd4bf] font-semibold">seleccionar, organizar y actualizar</span> la
+          información para que el agente reciba exactamente lo relevante en cada momento, evitando saturar la ventana de
+          contexto.
+        </p>
+      </div>
+
+      <!-- Componentes de Context Engineering -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm sm:text-base leading-relaxed">
+        <div
+          class="bg-white dark:bg-[#1a2333]/90 rounded-2xl p-5 sm:p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-2.5">
+          <div class="font-bold text-teal-700 dark:text-[#2dd4bf] text-base flex items-center gap-2">
+            Arnés (Harness)
+          </div>
+          <p class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+            El sistema que rodea al modelo y le permite actuar como agente: gestiona el contexto, proporciona
+            herramientas y orquesta la ejecución de tareas.
+          </p>
+        </div>
+
+        <div
+          class="bg-white dark:bg-[#1a2333]/90 rounded-2xl p-5 sm:p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-2.5">
+          <div class="font-bold text-teal-700 dark:text-[#2dd4bf] text-base flex items-center gap-2">
+            Guardarraíles
+          </div>
+          <p class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+            Reglas y controles que limitan las acciones del agente y validan sus resultados (permisos de archivos,
+            aprobaciones y comprobaciones de seguridad).
+          </p>
+        </div>
+      </div>
+      <div
+        class="bg-gradient-to-r from-teal-500/10 via-slate-100 dark:via-[#1a2333]/90 to-transparent rounded-2xl p-6 border border-teal-500/40 dark:border-teal-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div class="space-y-1">
+          <h3 class="font-bold text-slate-900 dark:text-white text-base">
+            Ejemplo en Github
+          </h3>
+          <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+            Consulta un ejemplo de la tarea
+          </p>
+        </div>
+
+        <a href="https://github.com/AlkemistDesign/02_Gestion-de-prompts" target="_blank" rel="noopener noreferrer"
+          class="inline-flex items-center justify-between gap-3 px-5 py-3 rounded-xl bg-white dark:bg-slate-900 border-2 border-teal-600 hover:border-teal-500 dark:border-teal-400 hover:bg-teal-50 dark:hover:bg-slate-800 text-teal-700 dark:text-[#2dd4bf] font-bold text-xs sm:text-sm transition-all shadow-sm hover:shadow-md group shrink-0">
+          <span>Abrir Ejemplo en Github</span>
+          <svg class="w-4 h-4 text-teal-600 dark:text-teal-400 group-hover:translate-x-1 transition-transform"
+            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+          </svg>
+        </a>
+      </div>
+    </div>
+
+    <!-- ================= SLIDE 1: AGENTS.MD ================= -->
+    <div id="slide-1" class="slide-view space-y-6">
+      <div class="pb-4 border-b border-slate-200 dark:border-slate-800">
+        <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+          AGENTS.md
+        </h1>
+      </div>
+
+      <!-- Explicación y Enlace a agents.md -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm sm:text-base leading-relaxed">
+        <div
+          class="bg-white dark:bg-[#1a2333]/90 rounded-2xl p-5 sm:p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-3">
+          <h2 class="font-bold text-teal-700 dark:text-[#2dd4bf] text-base sm:text-lg">¿Qué es AGENTS.md?</h2>
+          <p class="text-slate-700 dark:text-slate-300 text-sm sm:text-base leading-relaxed">
+            Es el archivo estándar que los agentes de IA leen automáticamente al iniciar una sesión. Contiene las reglas
+            operativas, el stack tecnológico y los límites del proyecto.
+          </p>
+          <div
+            class="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800 text-xs sm:text-sm font-mono text-slate-600 dark:text-slate-300">
+            <strong>Recomendación:</strong> Mantenerlo conciso (entre 30 y 40 líneas) para no desperdiciar tokens.
+          </div>
+        </div>
+
+        <div
+          class="bg-white dark:bg-[#1a2333]/90 rounded-2xl p-5 sm:p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 flex flex-col justify-between space-y-4">
+          <div class="space-y-2">
+            <h2 class="font-bold text-teal-700 dark:text-[#2dd4bf] text-base sm:text-lg">Documentación y Ejemplos</h2>
+            <p class="text-slate-700 dark:text-slate-300 text-sm sm:text-base leading-relaxed">
+              Consulta la especificación oficial, formato estándar y catálogo de ejemplos en:
+            </p>
+          </div>
+          <a href="https://agents.md/" target="_blank" rel="noopener noreferrer"
+            class="inline-flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-teal-500/40 hover:border-teal-500 text-teal-700 dark:text-[#2dd4bf] font-semibold text-xs sm:text-sm transition-all hover:bg-teal-50/50 dark:hover:bg-slate-800 group">
+            <div class="flex items-center gap-2 font-mono">
+              <svg class="w-4 h-4 text-teal-600 dark:text-teal-400" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+              </svg>
+              <span>https://agents.md/</span>
+            </div>
+            <svg class="w-4 h-4 text-teal-600 dark:text-teal-400 group-hover:translate-x-1 transition-transform"
+              fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3">
+              </path>
+            </svg>
+          </a>
+        </div>
+      </div>
+
+      <!-- Ejemplo copiable de AGENTS.md -->
+      <div class="space-y-2">
+        <div class="prompt-card rounded-2xl overflow-hidden shadow-lg border border-slate-700/50" data-raw-prompt="## Rol
+Actúa como desarrollador frontend senior que escribe código simple, claro y fácil de entender para alguien que está empezando a programar.
+## Contexto
+Quiero crear desde cero &quot;Diario de Estudio&quot;, una web para registrar mis sesiones de estudio y motivarme viendo mi racha de días seguidos estudiando. Esta es la primera versión y tiene que ser muy simple. La web se construirá poco a poco, así que ahora solo necesito una base limpia que funcione a la primera.
+## Tarea
+Crea la web con estas funcionalidades:
+1. Un formulario para registrar una sesión con:
+- Fecha (por defecto hoy, pero editable para poder apuntar días anteriores)
+- Tema (texto, obligatorio)
+- Minutos (número mayor que 0, obligatorio)
+2. La racha actual en grande, con un 🔥.
+3. La lista de sesiones, de la más reciente a la más antigua.
+4. Los datos guardados en localStorage para que no se pierdan al recargar.
+## Restricciones y reglas
+Racha:
+- Un día cuenta si tiene al menos una sesión.
+- La racha son los días consecutivos con sesión que terminan hoy.
+- Si hoy todavía no he estudiado pero ayer sí, la racha sigue viva: no se rompe hasta que termina el día.
+- Usa siempre la fecha local del usuario, nunca UTC.
+Técnicas:
+- HTML, CSS y JavaScript, sin frameworks, sin librerías y sin compilar nada.
+- Solo tres archivos: index.html, styles.css y app.js.
+- Tiene que funcionar abriendo index.html con doble clic, sin servidor ni instalación.
+- No añadas nada que no aparezca en este mensaje.
+- Diseño limpio y moderno, que se vea bien en el móvil.
+- Todos los textos de la interfaz en español.
+## Formato de salida
+1. Crea los tres archivos directamente en la carpeta del proyecto.
+2. Al terminar, responde con:
+- Un resumen de 3-4 líneas de lo que has creado.
+- Los pasos para probarlo.
+- Cualquier decisión que hayas tomado por tu cuenta y que yo deba revisar.">
+          <div
+            class="flex items-center justify-between px-4 sm:px-6 py-3 bg-[#13141f] border-b border-slate-800 text-xs">
+            <span class="token-tag font-mono text-xs font-semibold text-teal-400">AGENTS.md</span>
+            <button type="button" aria-label="Copiar plantilla al portapapeles"
+              class="copy-prompt-btn flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700/80 text-slate-300 hover:text-white border border-slate-700/80 transition-colors">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3">
+                </path>
+              </svg>
+              <span>Copiar Plantilla</span>
+            </button>
+          </div>
+          <div
+            class="prompt-content p-4 sm:p-6 text-xs sm:text-sm font-mono leading-relaxed overflow-x-auto text-slate-200 max-h-96 overflow-y-auto space-y-2">
+            <p><span class="token-keyword">## Rol</span></p>
+            <p>Actúa como desarrollador frontend senior que escribe código simple, claro y fácil de entender para
+              alguien que está empezando a programar.</p>
+
+            <p class="pt-1"><span class="token-keyword">## Contexto</span></p>
+            <p>Quiero crear desde cero <span class="token-str">"Diario de Estudio"</span>, una web para registrar mis
+              sesiones de estudio y motivarme viendo mi racha de días seguidos estudiando. Esta es la primera versión y
+              tiene que ser muy simple. La web se construirá poco a poco, así que ahora solo necesito una base limpia
+              que funcione a la primera.</p>
+
+            <p class="pt-1"><span class="token-keyword">## Tarea</span></p>
+            <p>Crea la web con estas funcionalidades:</p>
+            <p>1. Un formulario para registrar una sesión con:</p>
+            <p class="pl-4">- Fecha (por defecto hoy, pero editable para poder apuntar días anteriores)</p>
+            <p class="pl-4">- Tema (texto, obligatorio)</p>
+            <p class="pl-4">- Minutos (número mayor que 0, obligatorio)</p>
+            <p>2. La racha actual en grande, con un 🔥.</p>
+            <p>3. La lista de sesiones, de la más reciente a la más antigua.</p>
+            <p>4. Los datos guardados en <span class="token-str">localStorage</span> para que no se pierdan al recargar.
+            </p>
+
+            <p class="pt-1"><span class="token-keyword">## Restricciones y reglas</span></p>
+            <p class="text-teal-400 font-semibold">Racha:</p>
+            <p>- Un día cuenta si tiene al menos una sesión.</p>
+            <p>- La racha son los días consecutivos con sesión que terminan hoy.</p>
+            <p>- Si hoy todavía no he estudiado pero ayer sí, la racha sigue viva: no se rompe hasta que termina el día.
+            </p>
+            <p>- Usa siempre la fecha local del usuario, nunca UTC.</p>
+            <p class="text-teal-400 font-semibold pt-1">Técnicas:</p>
+            <p>- HTML, CSS y JavaScript, sin frameworks, sin librerías y sin compilar nada.</p>
+            <p>- Solo tres archivos: <span class="token-param">index.html</span>, <span
+                class="token-param">styles.css</span> y <span class="token-param">app.js</span>.</p>
+            <p>- Tiene que funcionar abriendo index.html con doble clic, sin servidor ni instalación.</p>
+            <p>- No añadas nada que no aparezca en este mensaje.</p>
+            <p>- Diseño limpio y moderno, que se vea bien en el móvil.</p>
+            <p>- Todos los textos de la interfaz en español.</p>
+
+            <p class="pt-1"><span class="token-keyword">## Formato de salida</span></p>
+            <p>1. Crea los tres archivos directamente en la carpeta del proyecto.</p>
+            <p>2. Al terminar, responde con:</p>
+            <p class="pl-4">- Un resumen de 3-4 líneas de lo que has creado.</p>
+            <p class="pl-4">- Los pasos para probarlo.</p>
+            <p class="pl-4">- Cualquier decisión que hayas tomado por tu cuenta y que yo deba revisar.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= SLIDE 2: MEMORY.MD ================= -->
+    <div id="slide-2" class="slide-view space-y-6">
+      <div class="pb-4 border-b border-slate-200 dark:border-slate-800">
+        <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+          MEMORY.md
+        </h1>
+      </div>
+
+      <!-- Explicación de MEMORY.md -->
+      <div
+        class="bg-white dark:bg-[#1a2333]/90 rounded-2xl p-5 sm:p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-3">
+        <h2 class="font-bold text-teal-700 dark:text-[#2dd4bf] text-base sm:text-lg">¿Por qué un fichero de Memoria?
+        </h2>
+        <p class="text-slate-700 dark:text-slate-300 text-sm sm:text-base leading-relaxed">
+          Dado que la memoria de un agente es limitada y se resetea entre sesiones o chats, una buena práctica
+          profesional es mantener un archivo <code>MEMORY.md</code> (máximo ~50 líneas) que resuma el estado actual, las
+          decisiones tomadas con su porqué y los errores a evitar.
+        </p>
+      </div>
+
+      <!-- Plantilla de MEMORY.md -->
+      <div class="space-y-2">
+        <div class="prompt-card rounded-2xl overflow-hidden shadow-lg border border-slate-700/50" data-raw-prompt="# MEMORY.md — Diario de Estudio
+Memoria del proyecto entre sesiones. Máximo ~50 líneas: resume o elimina lo que ya no aporte.
+
+## Estado actual
+- (vacío por ahora)
+
+## Decisiones (y por qué)
+- Sin backend ni dependencias: cualquiera debe poder abrirlo con doble clic.
+- Fecha editable en el formulario: permite registrar días pasados y ver la racha crecer.
+
+## Aprendizajes y errores a evitar
+- (vacío por ahora)
+
+## Próximos pasos
+- (vacío por ahora)">
+          <div
+            class="flex items-center justify-between px-4 sm:px-6 py-3 bg-[#13141f] border-b border-slate-800 text-xs">
+            <span class="token-tag font-mono text-xs font-semibold text-teal-400">MEMORY.md</span>
+            <button type="button" aria-label="Copiar MEMORY.md al portapapeles"
+              class="copy-prompt-btn flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700/80 text-slate-300 hover:text-white border border-slate-700/80 transition-colors">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3">
+                </path>
+              </svg>
+              <span>Copiar MEMORY.md</span>
+            </button>
+          </div>
+          <div
+            class="prompt-content p-4 sm:p-6 text-xs sm:text-sm font-mono leading-relaxed overflow-x-auto text-slate-200 max-h-72 overflow-y-auto space-y-2">
+            <p><span class="token-keyword"># MEMORY.md</span> — Diario de Estudio</p>
+            <p class="text-slate-400">Memoria del proyecto entre sesiones. Máximo ~50 líneas: resume o elimina lo que ya
+              no aporte.</p>
+
+            <p class="pt-1"><span class="token-keyword">## Estado actual</span></p>
+            <p>- (vacío por ahora)</p>
+
+            <p class="pt-1"><span class="token-keyword">## Decisiones (y por qué)</span></p>
+            <p>- Sin backend ni dependencias: cualquiera debe poder abrirlo con doble clic.</p>
+            <p>- Fecha editable en el formulario: permite registrar días pasados y ver la racha crecer.</p>
+
+            <p class="pt-1"><span class="token-keyword">## Aprendizajes y errores a evitar</span></p>
+            <p>- (vacío por ahora)</p>
+
+            <p class="pt-1"><span class="token-keyword">## Próximos pasos</span></p>
+            <p>- (vacío por ahora)</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Instrucción y Prompt para AGENTS.md -->
+      <div class="space-y-3 pt-2">
+        <p class="text-sm sm:text-base text-slate-800 dark:text-slate-200 leading-relaxed font-medium">
+          Ahora debemos añadir lo siguiente al <code>AGENTS.md</code>:
+        </p>
+
+        <div class="prompt-card rounded-2xl overflow-hidden shadow-lg border border-slate-700/50" data-raw-prompt="## Memoria
+- Al empezar, lee `MEMORY.md` para conocer el estado del proyecto y las decisiones tomadas.
+- Al terminar una tarea, actualízalo: estado actual, decisiones importantes (con su porqué) y errores a evitar.
+- Mantenlo breve (máximo ~50 líneas): resume o elimina lo que ya no aporte.
+- Si algo se convierte en una regla permanente, propón moverlo a `AGENTS.md` en lugar de dejarlo en la memoria.
+- No guardes nunca datos sensibles (claves, tokens, datos personales).
+
+Y en la sección de “Límites”, agregamos:
+✅ Siempre: actualizar `MEMORY.md` al terminar cada tarea.">
+          <div
+            class="flex items-center justify-between px-4 sm:px-6 py-3 bg-[#13141f] border-b border-slate-800 text-xs">
+            <span class="token-tag font-mono text-xs font-semibold text-teal-400">AGENTS.md (Memoria)</span>
+            <button type="button" aria-label="Copiar prompt al portapapeles"
+              class="copy-prompt-btn flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700/80 text-slate-300 hover:text-white border border-slate-700/80 transition-colors">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3">
+                </path>
+              </svg>
+              <span>Copiar Prompt</span>
+            </button>
+          </div>
+          <div
+            class="prompt-content p-4 sm:p-6 text-xs sm:text-sm font-mono leading-relaxed overflow-x-auto text-slate-200 max-h-72 overflow-y-auto space-y-2">
+            <p><span class="token-keyword">## Memoria</span></p>
+            <p>- Al empezar, lee <span class="token-param">`MEMORY.md`</span> para conocer el estado del proyecto y las
+              decisiones tomadas.</p>
+            <p>- Al terminar una tarea, actualízalo: estado actual, decisiones importantes (con su porqué) y errores a
+              evitar.</p>
+            <p>- Mantenlo breve (máximo ~50 líneas): resume o elimina lo que ya no aporte.</p>
+            <p>- Si algo se convierte en una regla permanente, propón moverlo a <span
+                class="token-param">`AGENTS.md`</span> en lugar de dejarlo en la memoria.</p>
+            <p>- No guardes nunca datos sensibles (claves, tokens, datos personales).</p>
+
+            <p class="pt-2 text-slate-400">Y en la sección de “Límites”, agregamos:</p>
+            <p class="text-teal-400 font-semibold">✅ Siempre: actualizar <span class="token-param">`MEMORY.md`</span> al
+              terminar cada tarea.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= SLIDE 3: DESIGN.MD ================= -->
+    <div id="slide-3" class="slide-view space-y-6">
+      <div class="pb-4 border-b border-slate-200 dark:border-slate-800">
+        <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+          DESIGN.md
+        </h1>
+      </div>
+
+      <!-- Explicación y Enlace a designmd.ai -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm sm:text-base leading-relaxed">
+        <div
+          class="bg-white dark:bg-[#1a2333]/90 rounded-2xl p-5 sm:p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-3">
+          <h2 class="font-bold text-teal-700 dark:text-[#2dd4bf] text-base sm:text-lg">¿Cómo definir DESIGN.md?</h2>
+          <p class="text-slate-700 dark:text-slate-300 text-sm sm:text-base leading-relaxed">
+            En mi experiencia la mejor forma de escribir un <code>DESIGN.md</code> es usar un prompt que te haga
+            preguntas y te ayude a definirlo.
+          </p>
+        </div>
+
+        <div
+          class="bg-white dark:bg-[#1a2333]/90 rounded-2xl p-5 sm:p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 flex flex-col justify-between space-y-4">
+          <div class="space-y-2">
+            <h2 class="font-bold text-teal-700 dark:text-[#2dd4bf] text-base sm:text-lg">Recurso externo</h2>
+            <p class="text-slate-700 dark:text-slate-300 text-sm sm:text-base leading-relaxed">
+              Consulta más información y especificaciones de diseño en:
+            </p>
+          </div>
+          <a href="https://designmd.ai/" target="_blank" rel="noopener noreferrer"
+            class="inline-flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-teal-500/40 hover:border-teal-500 text-teal-700 dark:text-[#2dd4bf] font-semibold text-xs sm:text-sm transition-all hover:bg-teal-50/50 dark:hover:bg-slate-800 group">
+            <div class="flex items-center gap-2 font-mono">
+              <svg class="w-4 h-4 text-teal-600 dark:text-teal-400" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+              </svg>
+              <span>https://designmd.ai/</span>
+            </div>
+            <svg class="w-4 h-4 text-teal-600 dark:text-teal-400 group-hover:translate-x-1 transition-transform"
+              fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3">
+              </path>
+            </svg>
+          </a>
+        </div>
+      </div>
+
+      <!-- Prompt de entrevista para generar DESIGN.md -->
+      <div class="space-y-2">
+        <div class="prompt-card rounded-2xl overflow-hidden shadow-lg border border-slate-700/50"
+          data-raw-prompt="Actúa como un Lead UX/UI Designer y Arquitecto Frontend. Mi objetivo es definir y documentar de forma exhaustiva el sistema de diseño de un nuevo proyecto web y generar un archivo `DESIGN.md` altamente técnico y estructurado.
+Tienes un archivo `AGENTS.md` con la definición del proyecto. Úsalo como contexto para entender el producto.
+Para lograr mi objetivo, necesito que me entrevistes para recopilar la información. NO generes el documento `DESIGN.md` todavía. Sigue estrictamente este proceso paso a paso, haciéndome preguntas divididas en 5 fases. Hazme solo las preguntas de una fase, espera mis respuestas y luego pasa a la siguiente.
+**Fases de la entrevista:**
+1. **Filosofía Visual, Principios y Normas de Accesibilidad (A11Y):**
+- ¿Cuál es el enfoque visual principal de la interfaz? (ej. Minimalismo funcional, diseño corporativo, UI tipo editor/terminal).
+- ¿Qué normas de accesibilidad (A11Y) debemos cumplir estrictamente? (ej. Nivel WCAG AA o AAA, ratios de contraste, soporte para lectores de pantalla/ARIA, y manejo de animaciones con `prefers-reduced-motion`).
+2. **Metodología de Color y Tipografía:**
+- ¿Qué sistema o metodología de color utilizaremos como base? (ej. Paleta tonal MD3, Tailwind colors, Radix UI).
+- ¿Cuáles serán los colores principales (Primario, Acento) y cómo estructuraremos la inversión semántica para el Modo Claro / Modo Oscuro?
+- ¿Qué estilo tipográfico buscamos? (Fuente general, fuente monoespaciada para código/datos y escala tipográfica).
+3. **Espaciado, Layout y Arquitectura de Navegación:**
+- ¿Usaremos un sistema de espaciado base de 4px/8px? ¿Qué estilo de bordes (border-radius) y sombras (elevaciones) prefieres?
+- ¿Cómo será la arquitectura de navegación general? (ej. Navbar superior fija, Sidebar colapsable, controles inferiores).
+- ¿Qué comportamiento y adaptaciones mobile-first (&lt; 768px) debemos prever?
+4. **Elementos Base y Estados de Interacción (Core UI):**
+- ¿Qué jerarquía de botones necesitamos (Primario, Secundario, Outline, Ghost/Texto)?
+- ¿Cómo deben comportarse y verse visualmente los estados de interacción (hover, active, focus-ring para accesibilidad, disabled, loading)?
+- ¿Hay alguna directriz particular para los inputs de formularios base?
+5. **Componentes Específicos y Necesidades del Proyecto (Basado en el AGENTS.md):**
+- *Instrucción para la IA:* Basándote en la información del proyecto/AGENTS.md, formula de 2 a 4 preguntas sobre **componentes o widgets exclusivos y complejos** que requerirá este proyecto en particular (por ejemplo: si es una plataforma educativa, pregunta por bloques de código o quizzes; si es un SaaS, pregunta por tablas de datos complejas o dashboards).
+- ¿Cómo debemos estilizar los enlaces de acción externa o recursos destacados?
+**Reglas de la entrevista:**
+- Haz preguntas claras y fáciles de responder.
+- Ofréceme 2 o 3 opciones o ejemplos de respuesta.
+- Una vez completadas las 5 fases, confirma que tienes todo y genera el archivo `DESIGN.md` completo en un bloque de código listo para copiar. El documento final DEBE incluir: normas de accesibilidad, tablas de tokens claro/oscuro, jerarquía tipográfica, arquitectura del layout, anatomía de botones/estados, y los componentes específicos del proyecto con ejemplos de código (HTML/Tailwind).
+Comienza confirmando que has leído el contexto del proyecto (si ya lo tienes) o pídeme que te lo comparta, preséntate brevemente y lanza las preguntas de la Fase 1.">
+          <div
+            class="flex items-center justify-between px-4 sm:px-6 py-3 bg-[#13141f] border-b border-slate-800 text-xs">
+            <span class="token-tag font-mono text-xs font-semibold text-teal-400">Prompt para generar un
+              DESIGN.md</span>
+            <button type="button" aria-label="Copiar prompt al portapapeles"
+              class="copy-prompt-btn flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700/80 text-slate-300 hover:text-white border border-slate-700/80 transition-colors">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3">
+                </path>
+              </svg>
+              <span>Copiar Prompt</span>
+            </button>
+          </div>
+          <div
+            class="prompt-content p-4 sm:p-6 text-xs sm:text-sm font-mono leading-relaxed overflow-x-auto text-slate-200 max-h-96 overflow-y-auto space-y-2">
+            <p><span class="token-role">Actúa como un Lead UX/UI Designer y Arquitecto Frontend.</span> Mi objetivo es
+              definir y documentar de forma exhaustiva el sistema de diseño de un nuevo proyecto web y generar un
+              archivo <span class="token-param">`DESIGN.md`</span> altamente técnico y estructurado.</p>
+            <p>Tienes un archivo <span class="token-param">`AGENTS.md`</span> con la definición del proyecto. Úsalo como
+              contexto para entender el producto.</p>
+            <p>Para lograr mi objetivo, necesito que me entrevistes para recopilar la información. <span
+                class="token-keyword">NO generes el documento `DESIGN.md` todavía.</span> Sigue estrictamente este
+              proceso paso a paso, haciéndome preguntas divididas en 5 fases. Hazme solo las preguntas de una fase,
+              espera mis respuestas y luego pasa a la siguiente.</p>
+
+            <p class="pt-2"><span class="token-keyword">**Fases de la entrevista:**</span></p>
+            <p><span class="token-key">1. **Filosofía Visual, Principios y Normas de Accesibilidad (A11Y):**</span></p>
+            <p class="pl-4">- ¿Cuál es el enfoque visual principal de la interfaz? (ej. Minimalismo funcional, diseño
+              corporativo, UI tipo editor/terminal).</p>
+            <p class="pl-4">- ¿Qué normas de accesibilidad (A11Y) debemos cumplir estrictamente? (ej. Nivel WCAG AA o
+              AAA, ratios de contraste, soporte para lectores de pantalla/ARIA, y manejo de animaciones con <span
+                class="token-param">`prefers-reduced-motion`</span>).</p>
+
+            <p><span class="token-key">2. **Metodología de Color y Tipografía:**</span></p>
+            <p class="pl-4">- ¿Qué sistema o metodología de color utilizaremos como base? (ej. Paleta tonal MD3,
+              Tailwind colors, Radix UI).</p>
+            <p class="pl-4">- ¿Cuáles serán los colores principales (Primario, Acento) y cómo estructuraremos la
+              inversión semántica para el Modo Claro / Modo Oscuro?</p>
+            <p class="pl-4">- ¿Qué estilo tipográfico buscamos? (Fuente general, fuente monoespaciada para código/datos
+              y escala tipográfica).</p>
+
+            <p><span class="token-key">3. **Espaciado, Layout y Arquitectura de Navegación:**</span></p>
+            <p class="pl-4">- ¿Usaremos un sistema de espaciado base de 4px/8px? ¿Qué estilo de bordes (border-radius) y
+              sombras (elevaciones) prefieres?</p>
+            <p class="pl-4">- ¿Cómo será la arquitectura de navegación general? (ej. Navbar superior fija, Sidebar
+              colapsable, controles inferiores).</p>
+            <p class="pl-4">- ¿Qué comportamiento y adaptaciones mobile-first (<span class="token-param">&lt;
+                768px</span>) debemos prever?</p>
+
+            <p><span class="token-key">4. **Elementos Base y Estados de Interacción (Core UI):**</span></p>
+            <p class="pl-4">- ¿Qué jerarquía de botones necesitamos (Primario, Secundario, Outline, Ghost/Texto)?</p>
+            <p class="pl-4">- ¿Cómo deben comportarse y verse visualmente los estados de interacción (hover, active,
+              focus-ring para accesibilidad, disabled, loading)?</p>
+            <p class="pl-4">- ¿Hay alguna directriz particular para los inputs de formularios base?</p>
+
+            <p><span class="token-key">5. **Componentes Específicos y Necesidades del Proyecto (Basado en el
+                AGENTS.md):**</span></p>
+            <p class="pl-4">- <span class="token-comment">*Instrucción para la IA:*</span> Basándote en la información
+              del proyecto/AGENTS.md, formula de 2 a 4 preguntas sobre <span class="token-keyword">**componentes o
+                widgets exclusivos y complejos**</span> que requerirá este proyecto en particular (por ejemplo: si es
+              una plataforma educativa, pregunta por bloques de código o quizzes; si es un SaaS, pregunta por tablas de
+              datos complejas o dashboards).</p>
+            <p class="pl-4">- ¿Cómo debemos estilizar los enlaces de acción externa o recursos destacados?</p>
+
+            <p class="pt-2"><span class="token-keyword">**Reglas de la entrevista:**</span></p>
+            <p>- Haz preguntas claras y fáciles de responder.</p>
+            <p>- Ofréceme 2 o 3 opciones o ejemplos de respuesta.</p>
+            <p>- Una vez completadas las 5 fases, confirma que tienes todo y genera el archivo <span
+                class="token-param">`DESIGN.md`</span> completo en un bloque de código listo para copiar. El documento
+              final DEBE incluir: normas de accesibilidad, tablas de tokens claro/oscuro, jerarquía tipográfica,
+              arquitectura del layout, anatomía de botones/estados, y los componentes específicos del proyecto con
+              ejemplos de código (HTML/Tailwind).</p>
+
+            <p class="pt-2"><span class="token-tag">Comienza confirmando que has leído el contexto del proyecto (si ya
+                lo tienes) o pídeme que te lo comparta, preséntate brevemente y lanza las preguntas de la Fase 1.</span>
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="space-y-3 pt-2">
+        <p class="text-sm sm:text-base text-slate-800 dark:text-slate-200 leading-relaxed font-medium">
+          Ahora debemos añadir lo siguiente al <code>AGENTS.md</code>:
+        </p>
+
+        <div class="prompt-card rounded-2xl overflow-hidden shadow-lg border border-slate-700/50"
+          data-raw-prompt="- Consultar DESIGN.md para todas las decisiones tipográficas, paleta de colores, márgenes, sombras y detalles visuales específicos.">
+          <div
+            class="flex items-center justify-between px-4 sm:px-6 py-3 bg-[#13141f] border-b border-slate-800 text-xs">
+            <span class="token-tag font-mono text-xs font-semibold text-teal-400">AGENTS.md</span>
+            <button type="button" aria-label="Copiar prompt al portapapeles"
+              class="copy-prompt-btn flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700/80 text-slate-300 hover:text-white border border-slate-700/80 transition-colors">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3">
+                </path>
+              </svg>
+              <span>Copiar Prompt</span>
+            </button>
+          </div>
+          <div
+            class="prompt-content p-4 sm:p-6 text-xs sm:text-sm font-mono leading-relaxed overflow-x-auto text-slate-200 max-h-72 overflow-y-auto space-y-2">
+            <p>- Consultar DESIGN.md para todas las decisiones tipográficas, paleta de colores, márgenes, sombras y
+              detalles visuales específicos.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= SLIDE 4: MODO PLAN ================= -->
+    <div id="slide-4" class="slide-view space-y-6">
+      <div class="pb-4 border-b border-slate-200 dark:border-slate-800">
+        <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+          Modo Plan
+        </h1>
+      </div>
+
+      <!-- Definición del Modo Plan -->
+      <div
+        class="bg-white dark:bg-[#1a2333]/90 rounded-2xl p-5 sm:p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-3">
+        <div class="flex items-center justify-between gap-2">
+          <h2 class="font-bold text-teal-700 dark:text-[#2dd4bf] text-base sm:text-lg">Planificar antes de actuar</h2>
+          <span
+            class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200">
+            Shift + TAB
+          </span>
+        </div>
+        <p class="text-slate-700 dark:text-slate-300 text-sm sm:text-base leading-relaxed">
+          El modo plan permite al agente analizar una tarea, consultar el proyecto y proponer los pasos antes de
+          ejecutarlos. Sirve para aclarar requisitos, detectar riesgos y revisar el enfoque contigo antes de modificar
+          archivos.
+        </p>
+      </div>
+
+      <!-- Cuándo usarlo vs Cuándo NO usarlo -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm leading-relaxed">
+        <div
+          class="p-5 rounded-2xl bg-teal-50/60 dark:bg-teal-950/40 border border-teal-200/60 dark:border-teal-800/60 space-y-3">
+          <div class="font-bold text-teal-800 dark:text-teal-300 text-sm sm:text-base flex items-center gap-1.5">
+            Cuándo usar el Modo Plan
+          </div>
+          <ul class="space-y-1.5 text-slate-700 dark:text-slate-300 text-sm">
+            <li>• Tareas grandes o nuevos módulos</li>
+            <li>• Refactorizaciones complejas</li>
+            <li>• Supervisión de arquitectura y estrategia</li>
+          </ul>
+        </div>
+
+        <div
+          class="p-5 rounded-2xl bg-rose-50/60 dark:bg-rose-950/40 border border-rose-200/60 dark:border-rose-800/60 space-y-3">
+          <div class="font-bold text-rose-800 dark:text-rose-300 text-sm sm:text-base flex items-center gap-1.5">
+            Cuándo NO usarlo (Modo Build directo)
+          </div>
+          <ul class="space-y-1.5 text-slate-700 dark:text-slate-300 text-sm">
+            <li>• Tareas pequeñas o puntuales</li>
+            <li>• Correcciones obvias de sintaxis o estilos</li>
+            <li>• Prototipado rápido desechable</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Prompt de Ejemplo de Modo Plan -->
+      <div class="space-y-2">
+        <div class="prompt-card rounded-2xl overflow-hidden shadow-lg border border-slate-700/50" data-raw-prompt="Vamos a comenzar el desarrollo del dashboard de Estudio.
+Antes de escribir código, prepárame un plan con:
+1. Cómo vas a calcular la mejor racha a partir de las sesiones guardadas, respetando las reglas de fechas y racha de AGENTS.md.
+2. Qué archivos vas a crear y para qué sireve cada uno.
+3. Los casos límite y las dudas que debo decidir yo antes de empezar.
+4. Qué actualizarías en AGENTS.md y en MEMORY.md.
+5. Hazme todas las preguntas que necesites para completar este plan.">
+          <div
+            class="flex items-center justify-between px-4 sm:px-6 py-3 bg-[#13141f] border-b border-slate-800 text-xs">
+            <span class="token-tag font-mono text-xs font-semibold text-teal-400">prompt modo plan</span>
+            <button type="button" aria-label="Copiar prompt al portapapeles"
+              class="copy-prompt-btn flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700/80 text-slate-300 hover:text-white border border-slate-700/80 transition-colors">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3">
+                </path>
+              </svg>
+              <span>Copiar Prompt</span>
+            </button>
+          </div>
+          <div
+            class="prompt-content p-4 sm:p-6 text-xs sm:text-sm font-mono leading-relaxed overflow-x-auto text-slate-200 space-y-2">
+            <p>Vamos a comenzar el desarrollo del <span class="token-str">dashboard de Estudio</span>.</p>
+            <p class="pt-1 text-slate-400"><span class="token-keyword">Antes de escribir código</span>, prepárame un
+              plan con:</p>
+            <p><span class="token-key">1.</span> Cómo vas a calcular la mejor racha a partir de las sesiones guardadas,
+              respetando las reglas de fechas y racha de <span class="token-param">AGENTS.md</span>.</p>
+            <p><span class="token-key">2.</span> Qué archivos vas a crear y para qué sireve cada uno.</p>
+            <p><span class="token-key">3.</span> Los casos límite y las dudas que debo decidir yo antes de empezar.</p>
+            <p><span class="token-key">4.</span> Qué actualizarías en <span class="token-param">AGENTS.md</span> y en
+              <span class="token-param">MEMORY.md</span>.
+            </p>
+            <p><span class="token-key">5.</span> Hazme todas las preguntas que necesites para completar este plan.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= SLIDE 5: Diferencia entre Workflow y Skill ================= -->
+    <div id="slide-5" class="slide-view space-y-6">
+      <div class="space-y-1 pb-4 border-b border-slate-200 dark:border-slate-800">
+        <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+          Diferencia entre Workflow y Skill
+        </h1>
+      </div>
+
+      <p class="text-sm sm:text-base text-slate-800 dark:text-slate-200 leading-relaxed">
+        Tanto los <strong>Workflows</strong> como los <strong>Skills</strong> sirven para automatizar y estandarizar
+        tareas. La diferencia principal radica en cómo y quién puede usarlos.
+      </p>
+
+      <!-- Tabla Comparativa -->
+      <div
+        class="bg-white dark:bg-[#1a2333]/90 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm overflow-hidden">
+        <div
+          class="px-5 py-4 border-b border-slate-200/80 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/40">
+          <h2 class="font-bold text-slate-900 dark:text-white text-base sm:text-lg">Comparativa</h2>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm">
+            <thead
+              class="bg-slate-100/80 dark:bg-slate-800/80 text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300 border-b border-slate-200/80 dark:border-slate-800/80">
+              <tr>
+                <th scope="col" class="px-5 py-3.5">Característica</th>
+                <th scope="col" class="px-5 py-3.5 text-teal-700 dark:text-[#2dd4bf]">Workflow (Flujo de trabajo)</th>
+                <th scope="col" class="px-5 py-3.5 text-teal-700 dark:text-[#2dd4bf]">Skill (Habilidad)</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-200/70 dark:divide-slate-800/70 text-slate-700 dark:text-slate-300">
+              <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors">
+                <td class="px-5 py-4 font-semibold text-slate-900 dark:text-white whitespace-nowrap">Definición</td>
+                <td class="px-5 py-4">Una secuencia lineal de pasos fijos y ordenados.</td>
+                <td class="px-5 py-4">Un paquete de capacidades y conocimientos permanentes.</td>
+              </tr>
+              <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors">
+                <td class="px-5 py-4 font-semibold text-slate-900 dark:text-white whitespace-nowrap">Invocación</td>
+                <td class="px-5 py-4">Se invoca manualmente en el cajón de prompts empleando comandos específicos</td>
+                <td class="px-5 py-4">Autónoma por el agente o explícita.</td>
+              </tr>
+              <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors">
+                <td class="px-5 py-4 font-semibold text-slate-900 dark:text-white whitespace-nowrap">Estructura</td>
+                <td class="px-5 py-4">Un único archivo (habitualmente Markdown o YAML).</td>
+                <td class="px-5 py-4">Un directorio bundled (SKILL.md + scripts + referencias).</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Nota Antigravity 2.0 -->
+      <div
+        class="p-5 rounded-2xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-900/50 flex items-start gap-3.5 text-sm sm:text-base text-amber-900 dark:text-amber-200 leading-relaxed shadow-sm">
+        <svg class="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" fill="none" stroke="currentColor"
+          viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <div>
+          <span class="font-bold">NOTA:</span> Antigravity 2.0 está migrando los flujos de trabajo hacia un modelo
+          basado principalmente en Skills.
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= SLIDE 6: Comandos Personalizados (Workflows) ================= -->
+    <div id="slide-6" class="slide-view space-y-6">
+      <div class="space-y-1 pb-4 border-b border-slate-200 dark:border-slate-800">
+        <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+          Comandos Personalizados (Workflows)
+        </h1>
+      </div>
+
+      <p class="text-sm sm:text-base text-slate-800 dark:text-slate-200 leading-relaxed">
+        Un workflow es un prompt reutilizable que ejecutas escribiendo <code
+          class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 font-mono text-sm">/nombre_comando</code>. Permite
+        repetir tareas habituales sin volver a escribir las instrucciones desde cero.
+      </p>
+
+      <!-- Layout 2 columnas: Imágenes a la izquierda, Texto a la derecha -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+        <!-- Izquierda: Imágenes crear workflow 1 y 2 -->
+        <div class="space-y-4">
+          <div
+            class="rounded-2xl overflow-hidden border border-slate-200/80 dark:border-slate-800 shadow-sm bg-slate-900">
+            <img src="assets/crear workflow 1.png" alt="Acceder a Customization y Workflows en Antigravity IDE"
+              class="w-full h-auto object-contain block" />
+          </div>
+          <div
+            class="rounded-2xl overflow-hidden border border-slate-200/80 dark:border-slate-800 shadow-sm bg-slate-900">
+            <img src="assets/Crear workflow 2.png" alt="Crear Workflow Global o Workspace en Antigravity IDE"
+              class="w-full h-auto object-contain block" />
+          </div>
+        </div>
+
+        <!-- Derecha: Texto explicativo de pasos -->
+        <div
+          class="bg-white dark:bg-[#1a2333]/90 rounded-2xl p-6 border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-4">
+          <h2 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
+            Pasos para crear un comando en Antigravity IDE:
+          </h2>
+          <ol
+            class="space-y-2.5 text-sm sm:text-base text-slate-700 dark:text-slate-300 list-decimal list-inside leading-relaxed">
+            <li>En el chat de la derecha le damos a los 3 puntos.</li>
+            <li>Entramos en <span class="font-semibold text-slate-900 dark:text-white">Customization</span>.</li>
+            <li>Vamos a la pestaña de <span class="font-semibold text-slate-900 dark:text-white">Workflows</span>.</li>
+            <li>
+              Aquí nos salen todos los que tenemos creados y dos botones para añadir:
+              <ul class="mt-2 ml-6 space-y-1.5 list-disc text-xs sm:text-sm">
+                <li><span class="font-semibold text-teal-700 dark:text-[#2dd4bf]">Global:</span> Estará accesible desde
+                  cualquier proyecto</li>
+                <li><span class="font-semibold text-teal-700 dark:text-[#2dd4bf]">Workspace:</span> Solo para el
+                  repositorio que tenemos abierto</li>
+              </ul>
+            </li>
+            <li>Una vez le damos a crear nos pregunta el nombre y nos genera el archivo.</li>
+            <li>Añade el encabezado con la descripción y las instrucciones del prompt.</li>
+          </ol>
+        </div>
+      </div>
+
+      <!-- Bloque de Prompt: feature.md -->
+      <div class="space-y-3 pt-2">
+        <div class="flex items-center justify-between">
+          <span class="text-xs sm:text-sm font-mono text-slate-500 dark:text-slate-400 font-medium">
+            Plantilla de comando
+          </span>
+          <span
+            class="text-xs font-mono px-2.5 py-1 rounded bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-[#2dd4bf] border border-teal-200/60 dark:border-teal-800/60 font-semibold">
+            PROMPT
+          </span>
+        </div>
+
+        <div class="prompt-card rounded-2xl overflow-hidden shadow-lg border border-slate-700/50" data-raw-prompt="---
+description: Planifica una nueva funcionalidad antes de tocar código
+---
+
+Quiero añadir esta funcionalidad: $ARGUMENTS
+
+Antes de escribir código, prepárame un plan con:
+1. Cómo la vas a implementar, respetando las reglas de AGENTS.md.
+2. Qué archivos vas a modificar y qué cambia en cada uno.
+3. Los casos límite y las dudas que debo decidir yo antes de empezar.
+4. Qué actualizarías en AGENTS.md y en MEMORY.md.
+
+Ten en cuenta el estado actual del proyecto: @MEMORY.md
+
+No modifiques ningún archivo hasta que apruebe el plan.">
+
+          <div
+            class="flex items-center justify-between px-4 sm:px-6 py-3 bg-[#13141f] border-b border-slate-800 text-xs">
+            <span class="token-tag font-mono text-xs font-semibold text-teal-400">feature.md</span>
+            <button type="button" aria-label="Copiar comando al portapapeles"
+              class="copy-prompt-btn flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700/80 text-slate-300 hover:text-white border border-slate-700/80 transition-colors">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3">
+                </path>
+              </svg>
+              <span>Copiar</span>
+            </button>
+          </div>
+
+          <pre
+            class="prompt-content p-4 sm:p-6 text-xs sm:text-sm font-mono leading-relaxed overflow-x-auto text-slate-200"><code><span class="token-comment">---
+description: Planifica una nueva funcionalidad antes de tocar código
+---</span>
+
+Quiero añadir esta funcionalidad: <span class="token-param">$ARGUMENTS</span>
+
+Antes de escribir código, prepárame un plan con:
+<span class="token-role">1.</span> Cómo la vas a implementar, respetando las reglas de <span class="token-key">AGENTS.md</span>.
+<span class="token-role">2.</span> Qué archivos vas a modificar y qué cambia en cada uno.
+<span class="token-role">3.</span> Los casos límite y las dudas que debo decidir yo antes de empezar.
+<span class="token-role">4.</span> Qué actualizarías en <span class="token-key">AGENTS.md</span> y en <span class="token-key">MEMORY.md</span>.
+
+Ten en cuenta el estado actual del proyecto: <span class="token-param">@MEMORY.md</span>
+
+<span class="token-tag">No modifiques ningún archivo hasta que apruebe el plan.</span></code></pre>
+        </div>
+      </div>
+
+      <!-- Ejemplo de invocación en consola -->
+      <div
+        class="bg-slate-100 dark:bg-slate-900/60 rounded-xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-800/80 text-xs sm:text-sm font-mono space-y-1.5">
+        <span class="text-slate-500 dark:text-slate-400 font-bold">Uso en la consola del IDE:</span>
+        <p class="text-teal-700 dark:text-[#2dd4bf] font-semibold text-sm sm:text-base">/feature mostrar el total de
+          minutos estudiados esta
+          semana</p>
+      </div>
+    </div>
+
+    <!-- ================= SLIDE 7: Agent Skills ================= -->
+    <div id="slide-7" class="slide-view space-y-6">
+      <div class="space-y-1 pb-4 border-b border-slate-200 dark:border-slate-800">
+        <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+          Agent Skills (Habilidades del Agente)
+        </h1>
+      </div>
+
+      <p class="text-sm sm:text-base text-slate-800 dark:text-slate-200 leading-relaxed">
+        Un Skill es un conjunto de instrucciones reutilizables que enseña al agente cómo realizar una tarea concreta. El
+        agente puede cargar las instrucciones completas cuando las necesita.
+      </p>
+
+      <!-- Ubicaciones de las Skills -->
+      <div
+        class="bg-white dark:bg-[#1a2333]/90 rounded-2xl p-6 border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-4">
+        <h2 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
+          Ubicaciones de las Skills
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm leading-relaxed">
+          <div
+            class="p-4 rounded-xl bg-teal-50/50 dark:bg-teal-950/30 border border-teal-200/70 dark:border-teal-800/60 space-y-2">
+            <div class="font-bold text-teal-800 dark:text-teal-300 flex items-center gap-1.5">
+              <span>Local (Espacio de trabajo)</span>
+            </div>
+            <p class="text-slate-700 dark:text-slate-300 text-xs sm:text-sm">
+              Se guardan en la raíz de tu proyecto dentro de la carpeta <code
+                class="font-mono bg-white/80 dark:bg-slate-900/80 px-1.5 py-0.5 rounded text-teal-700 dark:text-teal-300">.agent/skills/{nombre-de-la-skill}/SKILL.md</code>
+              (o <code
+                class="font-mono bg-white/80 dark:bg-slate-900/80 px-1.5 py-0.5 rounded text-teal-700 dark:text-teal-300">.agents/skills/</code>).
+              Tienen la prioridad más alta.
+            </p>
+          </div>
+
+          <div
+            class="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/70 dark:border-slate-800/60 space-y-2">
+            <div class="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+              <span>Global</span>
+            </div>
+            <p class="text-slate-700 dark:text-slate-300 text-xs sm:text-sm">
+              Se almacenan en el directorio de configuración del usuario en tu equipo, habitualmente en <code
+                class="font-mono bg-white/80 dark:bg-slate-800/80 px-1.5 py-0.5 rounded text-slate-700 dark:text-slate-300">vuestro-usuario/.gemini/config/skills/</code>.
+              Estas están disponibles para cualquier proyecto.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ejemplo Práctico: Skill de Manejo de Fechas -->
+      <div class="space-y-4 pt-2">
+        <div class="space-y-1">
+          <h2 class="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
+            Ejemplo Práctico: Skill de Manejo de Fechas
+          </h2>
+          <p class="text-sm sm:text-base text-slate-800 dark:text-slate-200 leading-relaxed">
+            Las fechas y zonas horarias son una fuente común de errores en aplicaciones web. Una skill especializada
+            previene que el modelo use métodos problemáticos como <code class="font-mono text-sm">toISOString()</code>
+            en
+            UTC.
+          </p>
+        </div>
+
+        <!-- Bloque de Prompt: .agents/skills/local-dates/SKILL.md -->
+        <div class="space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="text-xs sm:text-sm font-mono text-slate-500 dark:text-slate-400 font-medium">
+              Archivo: .agents/skills/local-dates/SKILL.md
+            </span>
+            <span
+              class="text-xs font-mono px-2.5 py-1 rounded bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-[#2dd4bf] border border-teal-200/60 dark:border-teal-800/60 font-semibold">
+              Habilidad de fechas
+            </span>
+          </div>
+
+          <div class="prompt-card rounded-2xl overflow-hidden shadow-lg border border-slate-700/50" data-raw-prompt="---
+name: local-dates
+description: Úsala siempre que escribas, modifiques o revises código que trabaje con fechas, días, semanas o rachas en el Diario de Estudio.
+---
+
+# Fechas locales en el Diario de Estudio
+
+Las fechas son la mayor fuente de bugs de este proyecto. Sigue esta guía siempre que toques código con fechas.
+
+## Reglas
+- Las fechas se guardan como texto &quot;AAAA-MM-DD&quot; en la zona horaria local del usuario.
+- Para obtener el día de hoy, construye el texto con getFullYear(), getMonth() + 1 y getDate(), rellenando con ceros.
+- Para convertir &quot;AAAA-MM-DD&quot; en fecha, usa new Date(año, mes - 1, día). Nunca new Date(&quot;AAAA-MM-DD&quot;): se interpreta en UTC.
+- Nunca uses toISOString() para obtener el día: devuelve la fecha en UTC.
+- Para sumar o restar días, usa setDate(getDate() ± n), nunca milisegundos (24 h no siempre es un día por los cambios de hora).
+- Reutiliza las funciones de fechas que ya existan en app.js antes de crear otras nuevas.
+
+## Checklist de revisión
+- [ ] ¿Algún toISOString() o new Date(&quot;AAAA-MM-DD&quot;)?
+- [ ] ¿Algún cálculo con 86400000 milisegundos?
+- [ ] ¿Qué pasa con una sesión registrada a las 00:30?
+- [ ] ¿Qué pasa el día del cambio de hora (último domingo de marzo y de octubre)?
+- [ ] ¿Se ignoran las fechas futuras donde corresponde?
+
+## Al terminar
+Indica qué puntos del checklist has comprobado y cómo.">
+
+            <div
+              class="flex items-center justify-between px-4 sm:px-6 py-3 bg-[#13141f] border-b border-slate-800 text-xs">
+              <span class="token-tag font-mono text-xs font-semibold text-teal-400">SKILL.md (local-dates)</span>
+              <button type="button" aria-label="Copiar skill al portapapeles"
+                class="copy-prompt-btn flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700/80 text-slate-300 hover:text-white border border-slate-700/80 transition-colors">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3">
+                  </path>
+                </svg>
+                <span>Copiar</span>
+              </button>
+            </div>
+
+            <pre
+              class="prompt-content p-4 sm:p-6 text-xs sm:text-sm font-mono leading-relaxed overflow-x-auto text-slate-200 max-h-72 overflow-y-auto"><code><span class="token-comment">---
+name: local-dates
+description: Úsala siempre que escribas, modifiques o revises código que trabaje con fechas, días, semanas o rachas en el Diario de Estudio.
+---</span>
+
+<span class="token-tag"># Fechas locales en el Diario de Estudio</span>
+
+Las fechas son la mayor fuente de bugs de este proyecto. Sigue esta guía siempre que toques código con fechas.
+
+<span class="token-role">## Reglas</span>
+- Las fechas se guardan como texto <span class="token-str">"AAAA-MM-DD"</span> en la zona horaria local del usuario.
+- Para obtener el día de hoy, construye el texto con <span class="token-key">getFullYear()</span>, <span class="token-key">getMonth() + 1</span> y <span class="token-key">getDate()</span>, rellenando con ceros.
+- Para convertir "AAAA-MM-DD" en fecha, usa <span class="token-key">new Date(año, mes - 1, día)</span>. Nunca new Date("AAAA-MM-DD"): se interpreta en UTC.
+- <span class="token-param">Nunca uses toISOString()</span> para obtener el día: devuelve la fecha en UTC.
+- Para sumar o restar días, usa <span class="token-key">setDate(getDate() ± n)</span>, nunca milisegundos (24 h no siempre es un día por los cambios de hora).
+- Reutiliza las funciones de fechas que ya existan en app.js antes de crear otras nuevas.
+
+<span class="token-role">## Checklist de revisión</span>
+- [ ] ¿Algún toISOString() o new Date("AAAA-MM-DD")?
+- [ ] ¿Algún cálculo con 86400000 milisegundos?
+- [ ] ¿Qué pasa con una sesión registrada a las 00:30?
+- [ ] ¿Qué pasa el día del cambio de hora (último domingo de marzo y de octubre)?
+- [ ] ¿Se ignoran las fechas futuras donde corresponde?
+
+<span class="token-role">## Al terminar</span>
+Indica qué puntos del checklist has comprobado y cómo.</code></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= SLIDE 8: Skills de terceros & Starter Pack ================= -->
+    <div id="slide-8" class="slide-view space-y-6">
+      <div class="pb-4 border-b border-slate-200 dark:border-slate-800">
+        <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+          Skills de Terceros y Starter Pack
+        </h1>
+      </div>
+
+      <p class="text-sm sm:text-base text-slate-800 dark:text-slate-200 leading-relaxed">
+        Utilizando plataformas como <a href="https://www.skills.sh" target="_blank" rel="noopener"
+          class="text-teal-600 dark:text-[#2dd4bf] font-semibold underline">skills.sh</a>, podemos dotar al agente de
+        habilidades
+        modulares especializadas creadas por la comunidad o los fabricantes de modelos, manteniendo el contexto
+        principal limpio.
+      </p>
+
+      <!-- Instalación con npx -->
+      <div
+        class="bg-white dark:bg-[#1a2333]/90 rounded-2xl p-6 border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-4">
+        <h2 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
+          Comando de instalación de skills
+        </h2>
+        <div class="prompt-card rounded-xl p-4 text-xs sm:text-sm font-mono text-slate-200 leading-relaxed">
+          <code class="text-teal-400">npx skills add vercel-labs/agent-skills</code><br>
+          <code class="text-slate-400"># O instalar una skill específica de Anthropic:</code><br>
+          <code class="text-teal-400">npx skills add https://github.com/anthropics/skills --skill frontend-design</code>
+        </div>
+        <p class="text-sm text-slate-600 dark:text-slate-400">
+          Durante la instalación puedes elegir el alcance: a nivel de proyecto o global para todos tus proyectos.
+        </p>
+      </div>
+
+      <!-- Starter Pack -->
+      <div class="space-y-3">
+        <h2 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
+          Starter Pack de Skills Esenciales:
+        </h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+          <div class="p-4 rounded-xl bg-white dark:bg-[#1a2333]/90 border border-slate-200/80 dark:border-slate-800/80">
+            <span class="font-mono font-bold text-teal-600 dark:text-[#2dd4bf] text-sm sm:text-base">find-skills
+              (Vercel)</span>
+            <p class="mt-1 text-slate-700 dark:text-slate-300 text-sm leading-relaxed">Busca e instala skills del
+              ecosistema cuando necesitas
+              una nueva capacidad.</p>
+          </div>
+          <div class="p-4 rounded-xl bg-white dark:bg-[#1a2333]/90 border border-slate-200/80 dark:border-slate-800/80">
+            <span class="font-mono font-bold text-teal-600 dark:text-[#2dd4bf] text-sm sm:text-base">grill-me (Matt
+              Pocock)</span>
+            <p class="mt-1 text-slate-700 dark:text-slate-300 text-sm leading-relaxed">Te hace preguntas incisivas sobre
+              tu plan hasta cubrir
+              todos los casos antes de programar.</p>
+          </div>
+          <div class="p-4 rounded-xl bg-white dark:bg-[#1a2333]/90 border border-slate-200/80 dark:border-slate-800/80">
+            <span class="font-mono font-bold text-teal-600 dark:text-[#2dd4bf] text-sm sm:text-base">frontend-design
+              (Anthropic)</span>
+            <p class="mt-1 text-slate-700 dark:text-slate-300 text-sm leading-relaxed">Crea interfaces visuales con
+              diseño refinado, armonioso y
+              profesional.</p>
+          </div>
+          <div class="p-4 rounded-xl bg-white dark:bg-[#1a2333]/90 border border-slate-200/80 dark:border-slate-800/80">
+            <span
+              class="font-mono font-bold text-teal-600 dark:text-[#2dd4bf] text-sm sm:text-base">web-design-guidelines
+              (Vercel)</span>
+            <p class="mt-1 text-slate-700 dark:text-slate-300 text-sm leading-relaxed">Revisa la interfaz y detecta
+              problemas de accesibilidad
+              (a11y), UX y contraste.</p>
+          </div>
+          <div
+            class="sm:col-span-2 p-4 rounded-xl bg-white dark:bg-[#1a2333]/90 border border-slate-200/80 dark:border-slate-800/80">
+            <span
+              class="font-mono font-bold text-teal-600 dark:text-[#2dd4bf] text-sm sm:text-base">systematic-debugging
+              (Jesse Vincent /
+              obra)</span>
+            <p class="mt-1 text-slate-700 dark:text-slate-300 text-sm leading-relaxed">Depuración estructurada mediante
+              método científico:
+              reproducir, aislar, formular hipótesis y verificar.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= SLIDE 9: MCP (Model Context Protocol) ================= -->
+    <div id="slide-9" class="slide-view space-y-6">
+      <div class="pb-4 border-b border-slate-200 dark:border-slate-800">
+        <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+          Model Context Protocol (MCP)
+        </h1>
+      </div>
+
+      <p class="text-sm sm:text-base text-slate-800 dark:text-slate-200 leading-relaxed">
+        <strong>MCP</strong> es un protocolo abierto estandarizado que permite conectar de manera segura al modelo de
+        lenguaje con herramientas locales, navegadores web, bases de datos y APIs externas.
+      </p>
+
+      <!-- 4 Ventajas clave -->
+      <div class="grid grid-cols-2 sm:grid-cols-2 gap-3">
+        <div
+          class="rounded-2xl overflow-hidden border border-slate-200/80 dark:border-slate-800 shadow-sm bg-slate-900">
+          <img src="assets/como crear mcp.png" alt="Acceder a Customization y Workflows en Antigravity IDE"
+            class="w-full h-auto object-contain block" />
+        </div>
+        <div
+          class="bg-white dark:bg-[#1a2333]/90 rounded-2xl p-6 border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-3">
+          <h2 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
+            Cómo añadir un servidor MCP a tu proyecto:
+          </h2>
+          <ol class="space-y-2 text-sm sm:text-base text-slate-700 dark:text-slate-300 list-decimal list-inside
+            leading-relaxed">
+            <li>Dale a los tres puntitos en el <code
+                class="font-mono text-xs sm:text-sm bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">chat del agente</code>
+            </li>
+            <li>Selecciona <code class="font-mono text-xs sm:text-sm">MCP SERVERS</code>
+            </li>
+            <li>Busca el MCP que quieres instalar</li>
+          </ol>
+
+          <h2 class="text-base sm:text-lg pt-4 font-bold text-slate-900 dark:text-white">
+            Si el MCP no sale en la lista
+          </h2>
+          <p>Edita o crea el archivo mcp_config.json en la ruta: <code
+              class="font-mono text-xs sm:text-sm bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">C:\Users\TuUsuario\.gemini\config\mcp_config.json</code>
+          </p>
+          <p>También puedes añadirlo dentro de tu proyecto en: <code
+              class="font-mono text-xs sm:text-sm bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">plugins/nombre_plugin/mcp_config.json</code>
+          </p>
+
+
+
+
+        </div>
+      </div>
+      <h2 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
+        MCPs Esenciales y Configuración
+      </h2>
+      <!-- Grid de MCPs -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
+        <!-- Chrome DevTools -->
+        <div
+          class="bg-white dark:bg-[#1a2333]/90 rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800/80 shadow-sm flex flex-col justify-between space-y-4">
+          <div class="space-y-1.5">
+            <h3 class="font-bold text-slate-900 dark:text-white text-base">Chrome DevTools (Google)</h3>
+            <p class="text-slate-700 dark:text-slate-300 text-xs sm:text-sm leading-relaxed">
+              El agente abre tu web en el navegador, la prueba, lee la consola y hace capturas.
+            </p>
+          </div>
+          <a href="https://github.com/ChromeDevTools/chrome-devtools-mcp/" target="_blank" rel="noopener noreferrer"
+            class="inline-flex items-center justify-between gap-2.5 px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-teal-500/40 hover:border-teal-500 text-teal-700 dark:text-[#2dd4bf] font-semibold text-xs transition-all hover:bg-teal-50/50 dark:hover:bg-slate-800 group">
+            <div class="flex items-center gap-1.5 font-mono truncate">
+              <svg class="w-3.5 h-3.5 text-teal-600 dark:text-teal-400 shrink-0" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+              </svg>
+              <span class="truncate">GitHub / chrome-devtools-mcp</span>
+            </div>
+            <svg
+              class="w-3.5 h-3.5 text-teal-600 dark:text-teal-400 group-hover:translate-x-1 transition-transform shrink-0"
+              fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3">
+              </path>
+            </svg>
+          </a>
+        </div>
+
+        <!-- Context7 -->
+        <div
+          class="bg-white dark:bg-[#1a2333]/90 rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800/80 shadow-sm flex flex-col justify-between space-y-4">
+          <div class="space-y-1.5">
+            <h3 class="font-bold text-slate-900 dark:text-white text-base">Context7 (Upstash)</h3>
+            <p class="text-slate-700 dark:text-slate-300 text-xs sm:text-sm leading-relaxed">
+              Le da al agente la documentación actualizada de cualquier librería o framework.
+            </p>
+          </div>
+          <a href="https://context7.com/" target="_blank" rel="noopener noreferrer"
+            class="inline-flex items-center justify-between gap-2.5 px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-teal-500/40 hover:border-teal-500 text-teal-700 dark:text-[#2dd4bf] font-semibold text-xs transition-all hover:bg-teal-50/50 dark:hover:bg-slate-800 group">
+            <div class="flex items-center gap-1.5 font-mono truncate">
+              <svg class="w-3.5 h-3.5 text-teal-600 dark:text-teal-400 shrink-0" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+              </svg>
+              <span class="truncate">https://context7.com/</span>
+            </div>
+            <svg
+              class="w-3.5 h-3.5 text-teal-600 dark:text-teal-400 group-hover:translate-x-1 transition-transform shrink-0"
+              fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3">
+              </path>
+            </svg>
+          </a>
+        </div>
+
+        <!-- GitHub -->
+        <div
+          class="bg-white dark:bg-[#1a2333]/90 rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800/80 shadow-sm flex flex-col justify-between space-y-4">
+          <div class="space-y-1.5">
+            <h3 class="font-bold text-slate-900 dark:text-white text-base">GitHub</h3>
+            <p class="text-slate-700 dark:text-slate-300 text-xs sm:text-sm leading-relaxed">
+              Gestiona repositorios, issues y pull requests desde el agente.
+            </p>
+          </div>
+          <a href="https://github.com/github/github-mcp-server" target="_blank" rel="noopener noreferrer"
+            class="inline-flex items-center justify-between gap-2.5 px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-teal-500/40 hover:border-teal-500 text-teal-700 dark:text-[#2dd4bf] font-semibold text-xs transition-all hover:bg-teal-50/50 dark:hover:bg-slate-800 group">
+            <div class="flex items-center gap-1.5 font-mono truncate">
+              <svg class="w-3.5 h-3.5 text-teal-600 dark:text-teal-400 shrink-0" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+              </svg>
+              <span class="truncate">GitHub / github-mcp-server</span>
+            </div>
+            <svg
+              class="w-3.5 h-3.5 text-teal-600 dark:text-teal-400 group-hover:translate-x-1 transition-transform shrink-0"
+              fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3">
+              </path>
+            </svg>
+          </a>
+        </div>
+
+        <!-- Figma -->
+        <div
+          class="bg-white dark:bg-[#1a2333]/90 rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800/80 shadow-sm flex flex-col justify-between space-y-4">
+          <div class="space-y-1.5">
+            <h3 class="font-bold text-slate-900 dark:text-white text-base">Figma</h3>
+            <p class="text-slate-700 dark:text-slate-300 text-xs sm:text-sm leading-relaxed">
+              Convierte diseños de Figma en código usando el contexto real del diseño.
+            </p>
+          </div>
+          <a href="https://www.figma.com/es-es/mcp-catalog/" target="_blank" rel="noopener noreferrer"
+            class="inline-flex items-center justify-between gap-2.5 px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-teal-500/40 hover:border-teal-500 text-teal-700 dark:text-[#2dd4bf] font-semibold text-xs transition-all hover:bg-teal-50/50 dark:hover:bg-slate-800 group">
+            <div class="flex items-center gap-1.5 font-mono truncate">
+              <svg class="w-3.5 h-3.5 text-teal-600 dark:text-teal-400 shrink-0" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+              </svg>
+              <span class="truncate">figma.com / mcp-catalog</span>
+            </div>
+            <svg
+              class="w-3.5 h-3.5 text-teal-600 dark:text-teal-400 group-hover:translate-x-1 transition-transform shrink-0"
+              fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3">
+              </path>
+            </svg>
+          </a>
+        </div>
+
+        <!-- Supabase -->
+        <div
+          class="bg-white dark:bg-[#1a2333]/90 rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800/80 shadow-sm flex flex-col justify-between space-y-4 md:col-span-2 lg:col-span-1">
+          <div class="space-y-1.5">
+            <h3 class="font-bold text-slate-900 dark:text-white text-base">Supabase</h3>
+            <p class="text-slate-700 dark:text-slate-300 text-xs sm:text-sm leading-relaxed">
+              Crea y consulta bases de datos directamente desde el agente
+            </p>
+          </div>
+          <a href="https://supabase.com/docs/guides/ai-tools/mcp" target="_blank" rel="noopener noreferrer"
+            class="inline-flex items-center justify-between gap-2.5 px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-teal-500/40 hover:border-teal-500 text-teal-700 dark:text-[#2dd4bf] font-semibold text-xs transition-all hover:bg-teal-50/50 dark:hover:bg-slate-800 group">
+            <div class="flex items-center gap-1.5 font-mono truncate">
+              <svg class="w-3.5 h-3.5 text-teal-600 dark:text-teal-400 shrink-0" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+              </svg>
+              <span class="truncate">supabase.com / ai-tools / mcp</span>
+            </div>
+            <svg
+              class="w-3.5 h-3.5 text-teal-600 dark:text-teal-400 group-hover:translate-x-1 transition-transform shrink-0"
+              fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3">
+              </path>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= SLIDE 10: Testing Chrome DevTools & AGENTS.md ================= -->
+    <div id="slide-10" class="slide-view space-y-6">
+      <div class="pb-4 border-b border-slate-200 dark:border-slate-800">
+        <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+          Testing con Chrome DevTools y AGENTS.md
+        </h1>
+      </div>
+
+      <p class="text-sm sm:text-base text-slate-800 dark:text-slate-200 leading-relaxed">
+        Con el MCP de Chrome DevTools activo, podemos pedirle al agente que pruebe la aplicación de forma visual e
+        interactiva antes de dar una tarea por finalizada.
+      </p>
+
+      <!-- Prompt de prueba -->
+      <div class="space-y-3">
+        <span class="text-xs sm:text-sm font-mono text-slate-500 dark:text-slate-400 font-medium">
+          Prompt para testing visual con Chrome DevTools:
+        </span>
+
+        <div class="prompt-card rounded-2xl overflow-hidden shadow-lg border border-slate-700/50" data-raw-prompt="Usa Chrome DevTools para probar el Diario de Estudio:
+1. Abre index.html en Chrome.
+2. Registra tres sesiones: hoy, ayer y anteayer.
+3. Comprueba que la racha muestra 3 y que la mejor racha es correcta.
+4. Revisa la consola por si hay errores.
+5. Haz una captura en tamaño móvil (375 px de ancho).
+
+Dime qué has comprobado y si has encontrado algún problema.">
+
+          <div
+            class="flex items-center justify-between px-4 sm:px-6 py-3 bg-[#13141f] border-b border-slate-800 text-xs">
+            <span class="token-tag font-mono text-xs font-semibold text-teal-400">Prompt de prueba</span>
+            <button type="button" aria-label="Copiar prompt de testing al portapapeles"
+              class="copy-prompt-btn flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700/80 text-slate-300 hover:text-white border border-slate-700/80 transition-colors">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3">
+                </path>
+              </svg>
+              <span>Copiar</span>
+            </button>
+          </div>
+
+          <pre
+            class="prompt-content p-4 sm:p-6 text-xs sm:text-sm font-mono leading-relaxed overflow-x-auto text-slate-200"><code><span class="token-role">Usa Chrome DevTools para probar el Diario de Estudio:</span>
+<span class="token-key">1.</span> Abre index.html en Chrome.
+<span class="token-key">2.</span> Registra tres sesiones: hoy, ayer y anteayer.
+<span class="token-key">3.</span> Comprueba que la racha muestra 3 y que la mejor racha es correcta.
+<span class="token-key">4.</span> Revisa la consola por si hay errores.
+<span class="token-key">5.</span> Haz una captura en tamaño móvil (375 px de ancho).
+
+<span class="token-tag">Dime qué has comprobado y si has encontrado algún problema.</span></code></pre>
+        </div>
+      </div>
+
+      <!-- Actualización en AGENTS.md -->
+      <div
+        class="p-5 sm:p-6 rounded-2xl bg-white dark:bg-[#1a2333]/90 border border-slate-200/80 dark:border-slate-800/80 space-y-3">
+        <h2 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
+          Mejora en AGENTS.md (Sección "Verificación")
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs sm:text-sm font-mono">
+          <div
+            class="p-4 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50 text-red-700 dark:text-red-300">
+            <span class="font-bold text-sm">Antes:</span>
+            <p class="mt-1.5 leading-relaxed">- No hay tests ni lint. Probar abriendo `index.html` en el navegador.</p>
+          </div>
+          <div
+            class="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 text-emerald-800 dark:text-emerald-300">
+            <span class="font-bold text-sm">Ahora con MCP:</span>
+            <p class="mt-1.5 leading-relaxed">- No hay tests automáticos. Después de cada cambio, verifica con el MCP de
+              Chrome DevTools:
+              abre `index.html`, prueba la funcionalidad, revisa la consola y comprueba la vista móvil.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= SLIDE 11: Resumen y Transición a Tarea 3 ================= -->
+    <div id="slide-11" class="slide-view space-y-6">
+      <div
+        class="bg-white dark:bg-[#1a2333]/90 rounded-3xl p-8 sm:p-12 border border-slate-200/80 dark:border-slate-800/80 shadow-md text-center space-y-6">
+        <div
+          class="w-16 h-16 rounded-2xl bg-teal-50 dark:bg-teal-950/60 border border-teal-200 dark:border-teal-800/60 flex items-center justify-center mx-auto text-teal-600 dark:text-[#2dd4bf]">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+          </svg>
+        </div>
+
+        <div class="space-y-3">
+          <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
+            ¡Harness Engineering Avanzado completado!
+          </h1>
+          <p class="text-sm sm:text-base text-slate-600 dark:text-slate-300 max-w-xl mx-auto leading-relaxed">
+            Has aprendido los fundamentos de <strong>Context Engineering</strong>, las reglas en
+            <strong>AGENTS.md</strong> y <strong>MEMORY.md</strong>, el <strong>Modo Plan</strong>, y cómo extender al
+            agente con <strong>Comandos personalizados</strong>, <strong>Agent Skills</strong> y <strong>MCPs</strong>.
+          </p>
+        </div>
+
+        <div class="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
+          <a href="4-otros-recursos.html"
+            class="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold bg-orange-600 hover:bg-orange-500 text-white shadow-md hover:shadow-lg transition-all">
+            <span>Ver Otros Recursos</span>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path>
+            </svg>
+          </a>
+          <a href="index.html"
+            class="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+            Volver al Hub
+          </a>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ========================================== -->
+  <!-- BARRA INFERIOR (CONTROLES LIMPIOS)        -->
+  <!-- ========================================== -->
+  <footer
+    class="sticky bottom-0 z-30 w-full bg-white/95 dark:bg-[#0c1322]/95 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800/80 transition-colors duration-200">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+
+      <!-- Botón Anterior -->
+      <button id="prev-btn" onclick="prevSlide()" type="button" aria-label="Ir al paso anterior"
+        class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-colors disabled:opacity-30 disabled:pointer-events-none">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path>
+        </svg>
+        <span>Anterior</span>
+      </button>
+
+      <!-- Botón Siguiente -->
+      <button id="next-btn" onclick="nextSlide()" type="button" aria-label="Ir al paso siguiente"
+        class="inline-flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-semibold bg-teal-600 hover:bg-teal-500 text-white shadow-sm hover:shadow focus:outline-none focus:ring-2 focus:ring-teal-400 transition-all disabled:opacity-30 disabled:pointer-events-none">
+        <span>Siguiente</span>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path>
+        </svg>
+      </button>
+
+    </div>
+  </footer>
+
+  <!-- ========================================== -->
+  <!-- SCRIPTS DE INTERACCIÓN Y NAVEGACIÓN        -->
+  <!-- ========================================== -->
+  <script>
+    // --- ESTADO DE SLIDES ---
+    const TOTAL_SLIDES = 12;
+    let currentSlide = 0;
+
+    const slides = Array.from({ length: TOTAL_SLIDES }, (_, i) => document.getElementById(`slide-${i}`));
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+
+    function updateView() {
+      // Activar slide visible
+      slides.forEach((slide, idx) => {
+        if (!slide) return;
+        if (idx === currentSlide) {
+          slide.classList.add('active');
+        } else {
+          slide.classList.remove('active');
+        }
+      });
+
+      // Control de botones inferior
+      if (prevBtn) {
+        prevBtn.disabled = currentSlide === 0;
+      }
+      if (nextBtn) {
+        nextBtn.disabled = currentSlide === TOTAL_SLIDES - 1;
+      }
+
+      // Actualizar estado en sidebar desktop
+      document.querySelectorAll('.sidebar-item').forEach(item => {
+        const target = parseInt(item.getAttribute('data-sidebar-target'), 10);
+        const numSpan = item.querySelector('.sidebar-num');
+        if (target === currentSlide) {
+          item.classList.add('bg-teal-50', 'dark:bg-slate-800', 'text-teal-700', 'dark:text-[#2dd4bf]', 'font-semibold');
+          if (numSpan) {
+            numSpan.classList.add('bg-teal-600', 'text-white');
+            numSpan.classList.remove('bg-slate-100', 'dark:bg-slate-800', 'text-slate-700', 'dark:text-slate-300');
+          }
+        } else {
+          item.classList.remove('bg-teal-50', 'dark:bg-slate-800', 'text-teal-700', 'dark:text-[#2dd4bf]', 'font-semibold');
+          if (numSpan) {
+            numSpan.classList.remove('bg-teal-600', 'text-white');
+            numSpan.classList.add('bg-slate-100', 'dark:bg-slate-800', 'text-slate-700', 'dark:text-slate-300');
+          }
+        }
+      });
+
+      // Actualizar hash en URL
+      window.location.hash = `paso-${currentSlide}`;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function goToSlide(idx) {
+      if (idx >= 0 && idx < TOTAL_SLIDES) {
+        currentSlide = idx;
+        updateView();
+        if (document.activeElement && document.activeElement.blur) {
+          document.activeElement.blur();
+        }
+      }
+    }
+
+    function nextSlide() {
+      if (currentSlide < TOTAL_SLIDES - 1) {
+        currentSlide++;
+        updateView();
+      }
+    }
+
+    function prevSlide() {
+      if (currentSlide > 0) {
+        currentSlide--;
+        updateView();
+      }
+    }
+
+    // Atajos de teclado (← y →)
+    document.addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      if (e.key === 'ArrowRight') nextSlide();
+      if (e.key === 'ArrowLeft') prevSlide();
+    });
+
+    // Gestión de Hash inicial
+    window.addEventListener('DOMContentLoaded', () => {
+      const hash = window.location.hash;
+      if (hash && hash.startsWith('#paso-')) {
+        const parsed = parseInt(hash.replace('#paso-', ''), 10);
+        if (!isNaN(parsed) && parsed >= 0 && parsed < TOTAL_SLIDES) {
+          currentSlide = parsed;
+        }
+      }
+      updateView();
+    });
+
+    // --- DRAWER MÓVIL ---
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    const closeDrawerBtn = document.getElementById('close-drawer-btn');
+    const mobileDrawer = document.getElementById('mobile-drawer');
+    const mobileBackdrop = document.getElementById('mobile-backdrop');
+
+    function openMobileMenu() {
+      mobileDrawer?.classList.remove('-translate-x-full');
+      mobileBackdrop?.classList.remove('hidden');
+      setTimeout(() => mobileBackdrop?.classList.remove('opacity-0'), 10);
+    }
+
+    function closeMobileMenu() {
+      mobileDrawer?.classList.add('-translate-x-full');
+      mobileBackdrop?.classList.add('opacity-0');
+      setTimeout(() => mobileBackdrop?.classList.add('hidden'), 300);
+    }
+
+    mobileMenuBtn?.addEventListener('click', openMobileMenu);
+    closeDrawerBtn?.addEventListener('click', closeMobileMenu);
+    mobileBackdrop?.addEventListener('click', closeMobileMenu);
+
+    // --- COPIAR PROMPTS ---
+    document.querySelectorAll('.copy-prompt-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const card = btn.closest('.prompt-card');
+        const rawText = card?.getAttribute('data-raw-prompt') || card?.querySelector('.prompt-content')?.innerText;
+        if (!rawText) return;
+
+        try {
+          await navigator.clipboard.writeText(rawText.trim());
+          const originalHTML = btn.innerHTML;
+          btn.innerHTML = `
+            <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
+            </svg>
+            <span class="text-emerald-300 font-semibold">¡Copiado!</span>
+          `;
+          btn.classList.add('border-emerald-500/80');
+
+          setTimeout(() => {
+            btn.innerHTML = originalHTML;
+            btn.classList.remove('border-emerald-500/80');
+          }, 1800);
+        } catch (err) {
+          console.error('Error al copiar al portapapeles:', err);
+        }
+      });
+    });
+
+    // --- TEMA CLARO/OSCURO ---
+    const themeToggleBtn = document.getElementById('theme-toggle');
+    themeToggleBtn?.addEventListener('click', () => {
+      const isDark = document.documentElement.classList.toggle('dark');
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    });
+  </script>
+</body>
+
+</html>
